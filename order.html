@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ordenar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================================
+       RESTAURANTE EL FOGÓN — Estilos globales + página de orden
+       ============================================================ */
+    :root {
+      --gold:       #e8c07d;
+      --gold-dark:  #c9993a;
+      --bg:         #0f0f0f;
+      --bg2:        #1a1a1a;
+      --bg3:        #242424;
+      --border:     #2e2e2e;
+      --text:       #f0ece4;
+      --text-muted: #888;
+      --green:      #4caf7a;
+      --red:        #e05c5c;
+      --blue:       #5c9ce0;
+      --orange:     #e09a5c;
+      --radius:     14px;
+      --shadow:     0 8px 32px rgba(0,0,0,.45);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    h1, h2, h3 { font-family: 'Playfair Display', serif; }
+    a { color: var(--gold); text-decoration: none; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+    /* Botones */
+    .btn {
+      display: inline-flex; align-items: center; gap: .5rem;
+      padding: .65rem 1.4rem; border-radius: 10px; border: none;
+      font-family: 'DM Sans', sans-serif; font-weight: 500; font-size: .9rem;
+      cursor: pointer; transition: all .2s; letter-spacing: .02em;
+    }
+    .btn-gold  { background: linear-gradient(135deg, var(--gold), var(--gold-dark)); color: #111; }
+    .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .btn-green { background: rgba(76,175,122,.15); border: 1px solid var(--green); color: var(--green); }
+    .btn-red   { background: rgba(224,92,92,.15);  border: 1px solid var(--red);   color: var(--red); }
+    .btn-blue  { background: rgba(92,156,224,.15); border: 1px solid var(--blue);  color: var(--blue); }
+    .btn:hover  { opacity: .85; transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+
+    /* Cards */
+    .card {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.5rem;
+      box-shadow: var(--shadow);
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-block; padding: .2rem .65rem; border-radius: 99px;
+      font-size: .75rem; font-weight: 500; letter-spacing: .04em;
+    }
+    .badge-pendiente      { background: rgba(224,154,92,.15); color: var(--orange); border: 1px solid var(--orange); }
+    .badge-en_preparacion { background: rgba(92,156,224,.15); color: var(--blue);   border: 1px solid var(--blue); }
+    .badge-listo          { background: rgba(76,175,122,.15); color: var(--green);  border: 1px solid var(--green); }
+    .badge-entregado      { background: rgba(100,100,100,.15); color: #888;         border: 1px solid #444; }
+    .badge-cancelado      { background: rgba(224,92,92,.15);  color: var(--red);    border: 1px solid var(--red); }
+
+    /* Formularios */
+    .form-control {
+      width: 100%; padding: .8rem 1rem; background: var(--bg);
+      border: 1px solid var(--border); border-radius: 10px;
+      color: var(--text); font-size: .95rem; outline: none;
+      font-family: 'DM Sans', sans-serif; transition: border-color .2s;
+    }
+    .form-control:focus { border-color: var(--gold); }
+    .form-label {
+      display: block; margin-bottom: .4rem; font-size: .8rem;
+      color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em;
+    }
+
+    /* Navbar */
+    .navbar {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(15,15,15,.92); backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 2rem;
+    }
+    .navbar-brand { font-family: 'Playfair Display', serif; color: var(--gold); font-size: 1.4rem; }
+    .navbar-links  { display: flex; gap: 1rem; align-items: center; }
+
+    /* Toasts */
+    #toast-container {
+      position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999;
+      display: flex; flex-direction: column; gap: .6rem;
+    }
+    .toast {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 12px; padding: 1rem 1.4rem;
+      display: flex; align-items: center; gap: .75rem;
+      box-shadow: 0 8px 32px rgba(0,0,0,.5);
+      animation: slideIn .3s ease; min-width: 280px; max-width: 380px;
+    }
+    .toast.success { border-color: var(--green); }
+    .toast.error   { border-color: var(--red); }
+    .toast.info    { border-color: var(--blue); }
+    @keyframes slideIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes fadeOut { to { opacity: 0; transform: translateX(60%); } }
+
+    /* Menú grid */
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1rem;
+    }
+    .menu-item {
+      background: var(--bg2); border: 2px solid var(--border);
+      border-radius: var(--radius); padding: 1.2rem;
+      cursor: pointer; transition: all .2s; text-align: center; position: relative;
+    }
+    .menu-item:hover   { border-color: var(--gold); transform: translateY(-2px); }
+    .menu-item.selected { border-color: var(--gold); background: rgba(232,192,125,.08); }
+    .menu-item .emoji  { font-size: 2.5rem; display: block; margin-bottom: .5rem; }
+    .menu-item .name   { font-weight: 600; font-size: 1rem; }
+    .menu-item .price  { color: var(--gold); font-size: 1.1rem; font-weight: 700; margin-top: .25rem; }
+    .menu-item .qty-badge {
+      position: absolute; top: -8px; right: -8px;
+      background: var(--gold); color: #111; font-weight: 700; font-size: .75rem;
+      width: 24px; height: 24px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* Carrito sidebar */
+    .cart-sidebar {
+      position: fixed; right: 0; top: 0; bottom: 0; width: 340px;
+      background: var(--bg2); border-left: 1px solid var(--border);
+      transform: translateX(100%); transition: transform .3s ease;
+      z-index: 200; display: flex; flex-direction: column;
+    }
+    .cart-sidebar.open { transform: translateX(0); }
+
+    /* Order card */
+    .order-card {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.25rem; transition: border-color .3s;
+    }
+    .order-card.nuevo { border-color: var(--orange); animation: pulse 1.5s ease infinite; }
+    @keyframes pulse {
+      0%,100% { box-shadow: 0 0 0 0 rgba(224,154,92,.3); }
+      50%      { box-shadow: 0 0 0 8px rgba(224,154,92,0); }
+    }
+
+    /* ── Específicos de esta página ── */
+    .hidden       { display: none; }
+    .main-layout  { display: flex; min-height: 100vh; flex-direction: column; }
+    .content      { flex: 1; padding: 1.5rem 2rem 2rem; max-width: 1100px; margin: 0 auto; width: 100%; }
+
+    .filter-bar { display: flex; gap: .6rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .filter-btn {
+      padding: .5rem 1.2rem; border-radius: 99px;
+      border: 1px solid var(--border); background: transparent;
+      color: var(--text-muted); cursor: pointer; font-size: .85rem; transition: all .2s;
+    }
+    .filter-btn.active,
+    .filter-btn:hover { background: var(--gold); color: #111; border-color: var(--gold); }
+
+    .cart-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 199; display: none; }
+    .cart-overlay.show { display: block; }
+    .cart-header { padding: 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .cart-body   { flex: 1; overflow-y: auto; padding: 1rem 1.5rem; }
+    .cart-footer { padding: 1.5rem; border-top: 1px solid var(--border); }
+
+    #registro-modal {
+      position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 500;
+      display: flex; align-items: center; justify-content: center; padding: 1rem;
+    }
+    .welcome-badge {
+      background: rgba(232,192,125,.12); border: 1px solid var(--gold);
+      border-radius: 12px; padding: .5rem 1.2rem; color: var(--gold); font-size: .9rem;
+    }
+
+    .tabs { display: flex; gap: .5rem; margin-bottom: 2rem; }
+    .tab-btn {
+      padding: .6rem 1.2rem; border: none; border-radius: 8px;
+      cursor: pointer; font-size: .9rem;
+      background: var(--bg3); color: var(--text-muted); transition: all .2s;
+    }
+    .tab-btn.active { background: var(--gold); color: #111; font-weight: 700; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .navbar       { padding: .75rem 1rem; }
+      .cart-sidebar { width: 100%; }
+      .menu-grid    { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 480px) {
+      .menu-grid { grid-template-columns: 1fr; }
+      .content   { padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══ MODAL REGISTRO ═══════════════════════════════════════ -->
+<div id="registro-modal">
+  <div class="card" style="max-width:440px;width:100%">
+    <div style="text-align:center;margin-bottom:2rem">
+      <h1 style="color:var(--gold);font-size:2.5rem"> <span id="nombre-restaurante">...</span></h1>
+      <p style="color:var(--text-muted)">Regístrate para ordenar</p>
+    </div>
+    <form id="form-registro">
+      <div class="form-group" style="margin-bottom:1.2rem">
+        <label class="form-label">Tu nombre</label>
+        <input name="nombre" type="text" class="form-control" placeholder="¿Cómo te llamas?" required>
+      </div>
+      <div class="form-group" style="margin-bottom:1.2rem">
+        <label class="form-label">Tipo de orden</label>
+        <select name="tipo" class="form-control" id="tipo-select" onchange="toggleMesa()">
+          <option value="mesa"> En mesa</option>
+          <option value="para_llevar"> Para llevar</option>
+        </select>
+      </div>
+      <div class="form-group" id="mesa-field" style="margin-bottom:1.5rem">
+        <label class="form-label">Número de mesa</label>
+        <input name="mesa" type="number" class="form-control" min="1" max="30" placeholder="Ej: 5">
+      </div>
+      <button type="submit" class="btn btn-gold" style="width:100%;justify-content:center;font-size:1.1rem;padding:1rem">
+        ¡Entrar y ordenar! →
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- ═══ NAVBAR ═══════════════════════════════════════════════ -->
+<nav class="navbar">
+  <span class="navbar-brand" style="display:flex;align-items:center;gap:.6rem">
+  <span id="logo-nav" style="display:flex;align-items:center"></span>
+  <span id="nombre-restaurante-nav">...</span>
+</span>
+  <div class="navbar-links">
+    <span class="welcome-badge" id="welcome-name" style="display:none"></span>
+    <button id="cart-toggle" class="btn btn-gold" style="position:relative">
+      Mi Orden
+      <span id="cart-badge" style="background:#e05c5c;color:#fff;font-size:.7rem;font-weight:700;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;position:absolute;top:-8px;right:-8px">0</span>
+    </button>
+  </div>
+</nav>
+
+<!-- ═══ MAIN ══════════════════════════════════════════════════ -->
+<div id="app-main" class="hidden main-layout">
+  <div class="content">
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab('menu',this)"> Menú</button>
+      <button class="tab-btn" onclick="showTab('pedidos',this)"> Mis pedidos</button>
+    </div>
+
+    <!-- TAB MENÚ -->
+    <!-- TAB MENÚ -->
+    <div id="tab-menu">
+
+      <!-- HERO BANNER -->
+      <div id="hero-banner" style="width:100%;height:220px;border-radius:16px;margin-bottom:1.5rem;position:relative;overflow:hidden;background:var(--bg3);display:flex;align-items:center;justify-content:center;">
+        <div id="hero-bg" style="position:absolute;inset:0;background-size:cover;background-position:center;filter:brightness(.45);"></div>
+        <div style="position:relative;z-index:1;text-align:center;padding:1rem">
+          <h1 id="hero-nombre" style="font-family:'Playfair Display',serif;font-size:2.8rem;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.7)">...</h1>
+          <p id="hero-slogan" style="color:rgba(255,255,255,.75);font-size:1rem;margin-top:.4rem">Bienvenido · Ordena desde tu mesa</p>
+        </div>
+      </div>
+
+      <div class="filter-bar">
+        <button class="filter-btn active" data-cat="todos">Todos</button>
+        <button class="filter-btn" data-cat="comida">🌮 Comida</button>
+        <button class="filter-btn" data-cat="bebida">🥤 Bebidas</button>
+        <button class="filter-btn" data-cat="postre">🍮 Postres</button>
+      </div>
+      <div id="menu-grid" class="menu-grid">
+        <div style="color:var(--text-muted);grid-column:1/-1;text-align:center;padding:3rem">Cargando menú...</div>
+      </div>
+    </div>
+
+    <!-- TAB MIS PEDIDOS -->
+    <div id="tab-pedidos" style="display:none">
+      <h2 style="margin-bottom:1.5rem">Mis pedidos del día</h2>
+      <div id="mis-pedidos"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ CARRITO SIDEBAR ═══════════════════════════════════════ -->
+<div class="cart-overlay" id="cart-overlay" onclick="document.getElementById('cart-sidebar').classList.remove('open');this.classList.remove('show')"></div>
+<div class="cart-sidebar" id="cart-sidebar">
+  <div class="cart-header">
+    <h2 style="font-size:1.3rem">🛒 Tu orden</h2>
+    <button id="cart-close" style="background:none;border:none;color:var(--text);font-size:1.5rem;cursor:pointer">×</button>
+  </div>
+  <div class="cart-body">
+    <div id="cart-list"></div>
+  </div>
+  <div class="cart-footer">
+    <div style="margin-bottom:1rem">
+      <label class="form-label">Notas especiales (opcional)</label>
+      <textarea id="notas-input" class="form-control" placeholder="Ej: sin chile, sin cebolla..." rows="2" style="resize:none"></textarea>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+      <span style="font-size:1.1rem;color:var(--text-muted)">Total</span>
+      <span id="cart-total" style="font-family:'Playfair Display',serif;font-size:1.6rem;color:var(--gold)">$0.00</span>
+    </div>
+    <button id="btn-send-order" class="btn btn-gold" style="width:100%;justify-content:center;font-size:1.05rem;padding:1rem">
+      📨 Enviar pedido
+    </button>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+  // Cargar nombre del restaurante desde URL
+(async () => {
+  const params  = new URLSearchParams(window.location.search);
+  const rid     = params.get('rid');
+  const rNombre = params.get('r');
+
+  let nombre = rNombre || 'Restaurante';
+
+  if (rid) {
+    try {
+      const res  = await fetch('./restaurantes.php?accion=nombre&id=' + rid);
+      const json = await res.json();
+      if (json.ok) nombre = json.nombre;
+    } catch {}
+  }
+
+  document.querySelectorAll('#nombre-restaurante, #nombre-restaurante-nav').forEach(el => {
+    if (el) el.textContent = nombre;
+  });
+  document.title = 'Ordenar — ' + nombre;
+
+  // Hero banner
+  // Hero banner — nombre
+  const heroNombre = document.getElementById('hero-nombre');
+  if (heroNombre) heroNombre.textContent = nombre;
+
+  // Logo, hero y slogan por restaurante_id (cada restaurante tiene los suyos)
+  const ridKey  = params.get('rid') || '';
+  const logoImg = ridKey ? localStorage.getItem('ros_logo_'   + ridKey) : null;
+  const heroBg  = ridKey ? localStorage.getItem('ros_hero_'   + ridKey) : null;
+  const slogan  = ridKey ? localStorage.getItem('ros_slogan_' + ridKey) : null;
+
+  const logoNav = document.getElementById('logo-nav');
+  if (logoImg && logoNav) {
+    logoNav.innerHTML = `<img src="${logoImg}" style="width:36px;height:36px;border-radius:8px;object-fit:cover">`;
+  }
+
+  const heroBgEl = document.getElementById('hero-bg');
+  if (heroBg && heroBgEl) heroBgEl.style.backgroundImage = `url(${heroBg})`;
+
+  const heroSlogan = document.getElementById('hero-slogan');
+  if (slogan && heroSlogan) heroSlogan.textContent = slogan;
+const State = {
+  token:   getCookie('cliente_token'),
+  usuario: JSON.parse(localStorage.getItem('fogon_usuario') || 'null'),
+  carrito: [],
+  menu:    []
+};
+
+function getCookie(n) {
+  const m = document.cookie.match(new RegExp('(^| )' + n + '=([^;]+)'));
+  return m ? decodeURIComponent(m[2]) : '';
+}
+function setCookie(n, v, d = 1) {
+  document.cookie = `${n}=${encodeURIComponent(v)};expires=${new Date(Date.now() + d * 86400000).toUTCString()};path=/;SameSite=Lax`;
+}
+function fmt(n) {
+  return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(n);
+}
+
+function toast(msg, type = 'info') {
+  const c = document.getElementById('toast-container');
+  const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<span>${icons[type]}</span><span>${msg}</span>`;
+  c.appendChild(t);
+  setTimeout(() => { t.style.animation = 'fadeOut .4s forwards'; setTimeout(() => t.remove(), 400); }, 3500);
+}
+
+function toggleMesa() {
+  document.getElementById('mesa-field').style.display =
+    document.getElementById('tipo-select').value === 'mesa' ? '' : 'none';
+}
+
+function showTab(name, btn) {
+  document.getElementById('tab-menu').style.display    = name === 'menu'    ? '' : 'none';
+  document.getElementById('tab-pedidos').style.display = name === 'pedidos' ? '' : 'none';
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (name === 'pedidos') cargarMisPedidos();
+}
+
+/* ── Carrito ───────────────────────────────────────────────── */
+function addToCart(item) {
+  const ex = State.carrito.find(c => c.item.id === item.id);
+  if (ex) ex.cantidad++; else State.carrito.push({ item, cantidad: 1 });
+  renderCart(); renderMenu();
+  toast(`${item.emoji} ${item.nombre} añadido`, 'success');
+  document.getElementById('cart-overlay').classList.add('show');
+  document.getElementById('cart-sidebar').classList.add('open');
+}
+function removeFromCart(id) {
+  const idx = State.carrito.findIndex(c => c.item.id === id);
+  if (idx === -1) return;
+  if (State.carrito[idx].cantidad > 1) State.carrito[idx].cantidad--;
+  else State.carrito.splice(idx, 1);
+  renderCart(); renderMenu();
+}
+function cartTotal() { return State.carrito.reduce((s, c) => s + c.item.precio * c.cantidad, 0); }
+function cartCount() { return State.carrito.reduce((s, c) => s + c.cantidad, 0); }
+
+function renderCart() {
+  const list  = document.getElementById('cart-list');
+  const badge = document.getElementById('cart-badge');
+  if (badge) badge.textContent = cartCount();
+  document.getElementById('cart-total').textContent = fmt(cartTotal());
+  if (!State.carrito.length) {
+    list.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:2rem">Tu carrito está vacío</p>';
+    return;
+  }
+  list.innerHTML = State.carrito.map(c => `
+    <div style="display:flex;align-items:center;gap:.75rem;padding:.85rem 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:1.5rem">${c.item.emoji}</span>
+      <div style="flex:1">
+        <div style="font-weight:500">${c.item.nombre}</div>
+        <div style="color:var(--gold);font-size:.9rem">${fmt(c.item.precio)}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:.4rem">
+        <button onclick="removeFromCart(${c.item.id})" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);width:28px;height:28px;border-radius:6px;cursor:pointer">−</button>
+        <span style="min-width:20px;text-align:center;font-weight:700">${c.cantidad}</span>
+        <button onclick="addToCart(${JSON.stringify(c.item).replace(/"/g, "'")})" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);width:28px;height:28px;border-radius:6px;cursor:pointer">+</button>
+      </div>
+      <div style="min-width:70px;text-align:right;font-weight:600">${fmt(c.item.precio * c.cantidad)}</div>
+    </div>`).join('');
+}
+
+/* ── Menú ──────────────────────────────────────────────────── */
+async function cargarMenu() {
+  try {
+    const r   = await fetch(apiURL('menu.php?accion=lista&token=' + (State.token || '')));
+    const res = await r.json();
+    if (!res.ok) return;
+    State.menu = res.data;
+    renderMenu();
+  } catch(err) {
+    console.error('cargarMenu:', err);
+    toast('No se pudo cargar el menú', 'error');
+  }
+}
+
+function renderMenu(filtro = 'todos') {
+  const grid  = document.getElementById('menu-grid');
+  const items = filtro === 'todos' ? State.menu : State.menu.filter(i => i.categoria === filtro);
+  grid.innerHTML = items.map(item => {
+    const enC = State.carrito.find(c => c.item.id === item.id);
+    return `<div class="menu-item ${enC ? 'selected' : ''}" onclick='addToCart(${JSON.stringify(item)})'>
+      ${enC ? `<div class="qty-badge">${enC.cantidad}</div>` : ''}
+      ${item.imagen
+        ? `<img src="/tienda/${item.imagen}" style="width:100%;height:120px;object-fit:cover;border-radius:10px;margin-bottom:.5rem">`
+        : `<span class="emoji">${item.emoji}</span>`
+      }
+      <div class="name">${item.nombre}</div>
+      <div class="price">${fmt(item.precio)}</div>
+      <div style="font-size:.8rem;color:var(--text-muted);margin-top:.25rem">${item.descripcion || ''}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ── Mis Pedidos ───────────────────────────────────────────── */
+async function cargarMisPedidos() {
+  if (!State.token) return;
+  try {
+    const r   = await fetch(apiURL(`pedidos.php?accion=mis_pedidos&token=${State.token}`));
+    const res = await r.json();
+    if (!res.ok) return;
+    const labels = {
+      pendiente: '⏳ Pendiente', en_preparacion: '👨‍🍳 En preparación',
+      listo: '✅ ¡Listo!', entregado: '🎉 Entregado', cancelado: '❌ Cancelado'
+    };
+    const cont = document.getElementById('mis-pedidos');
+    if (!res.data.length) {
+      cont.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:2rem">Aún no has pedido nada</p>';
+      return;
+    }
+    cont.innerHTML = res.data.map(p => `
+      <div class="order-card" style="margin-bottom:1rem">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem">
+          <div>
+            <span style="font-family:'Playfair Display',serif;font-size:1.3rem">Orden #${p.numero_orden}</span>
+            <span style="margin-left:.75rem;color:var(--text-muted);font-size:.85rem">
+              ${p.tipo === 'mesa' ? `Mesa ${p.mesa_numero}` : 'Para llevar'}
+            </span>
+          </div>
+          <span class="badge badge-${p.estado}">${labels[p.estado] || p.estado}</span>
+        </div>
+        <div style="color:var(--text-muted);font-size:.9rem">${p.resumen || ''}</div>
+        <div style="display:flex;justify-content:flex-end;font-weight:700;color:var(--gold);margin-top:.5rem">
+          ${fmt(p.total)}
+        </div>
+      </div>`).join('');
+  } catch {}
+}
+
+/* ── URL base dinámica (funciona con cualquier ruta de servidor) ── */
+function apiURL(endpoint) { return "/tienda/" + endpoint; }
+
+/* ── Registro ──────────────────────────────────────────────── */
+document.getElementById('form-registro').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const btn    = this.querySelector('button[type=submit]');
+  const nombre = this.querySelector('[name=nombre]').value.trim();
+  const tipo   = this.querySelector('[name=tipo]').value;
+  const mesa   = parseInt(this.querySelector('[name=mesa]')?.value || '0');
+
+  if (!nombre) { toast('Escribe tu nombre', 'error'); return; }
+  if (tipo === 'mesa' && (!mesa || mesa < 1)) { toast('Pon un número de mesa válido', 'error'); return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Registrando...';
+
+  try {
+    const r = await fetch(apiURL('pedidos.php?accion=registrar_cliente'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre, tipo, mesa })
+    });
+
+    if (!r.ok) throw new Error(`HTTP ${r.status}: ${r.statusText}`);
+
+    const res = await r.json();
+    if (!res.ok) { toast(res.mensaje || 'Error del servidor', 'error'); return; }
+
+    State.token   = res.data.token;
+    State.usuario = res.data.usuario;
+    setCookie('cliente_token', res.data.token, 1);
+    localStorage.setItem('fogon_usuario', JSON.stringify(res.data.usuario));
+    document.getElementById('registro-modal').remove();
+    document.getElementById('app-main').classList.remove('hidden');
+    const wn = document.getElementById('welcome-name');
+    wn.textContent   = '👋Bienvenid@ ' + nombre;
+    wn.style.display = '';
+    cargarMenu();
+    setInterval(cargarMisPedidos, 15000);
+    toast('🎉 ' + res.mensaje, 'success');
+  } catch(err) {
+    console.error('Error registro:', err);
+    if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
+      toast('❌ No se puede conectar al servidor. ¿Está corriendo XAMPP/PHP?', 'error');
+    } else if (err.message.includes('404')) {
+      toast('❌ Ruta de API no encontrada. Verifica que el proyecto esté en htdocs/restaurante', 'error');
+    } else {
+      toast('❌ Error: ' + err.message, 'error');
+    }
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '¡Entrar y ordenar! →';
+  }
+});
+
+/* ── Eventos ───────────────────────────────────────────────── */
+document.getElementById('cart-toggle').addEventListener('click', () => {
+  document.getElementById('cart-sidebar').classList.toggle('open');
+  document.getElementById('cart-overlay').classList.toggle('show');
+});
+document.getElementById('cart-close').addEventListener('click', () => {
+  document.getElementById('cart-sidebar').classList.remove('open');
+  document.getElementById('cart-overlay').classList.remove('show');
+});
+document.getElementById('btn-send-order').addEventListener('click', async () => {
+  if (!State.carrito.length) { toast('Tu carrito está vacío', 'error'); return; }
+  if (!State.token)           { toast('Regístrate primero', 'error');   return; }
+
+  const btn = document.getElementById('btn-send-order');
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+
+  const notas = document.getElementById('notas-input').value;
+  const items = State.carrito.map(c => ({ menu_id: c.item.id, cantidad: c.cantidad }));
+
+  try {
+    const url = apiURL('pedidos.php?accion=crear_pedido');
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items, notas, token: State.token })
+    });
+
+    // Leer respuesta como texto primero para detectar errores PHP
+    const texto = await r.text();
+    let res;
+    try {
+      res = JSON.parse(texto);
+    } catch {
+      console.error('Respuesta no es JSON:', texto);
+      toast('❌ Error del servidor: ' + texto.substring(0, 120), 'error');
+      return;
+    }
+
+    if (!res.ok) {
+      toast('❌ ' + (res.mensaje || 'Error desconocido'), 'error');
+      return;
+    }
+
+    toast('🎉 ' + res.mensaje, 'success');
+    State.carrito = [];
+    renderCart(); renderMenu();
+    document.getElementById('cart-sidebar').classList.remove('open');
+    document.getElementById('cart-overlay').classList.remove('show');
+
+  } catch (err) {
+    console.error('Error al enviar pedido:', err);
+    toast('❌ Sin conexión al servidor. ¿Está corriendo XAMPP?', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '📨 Enviar pedido';
+  }
+});
+
+document.querySelectorAll('.filter-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    renderMenu(b.dataset.cat);
+  });
+});
+
+/* ── Pre-fill desde URL del QR ─────────────────────────────── */
+const urlParams = new URLSearchParams(window.location.search);
+const urlMesa   = urlParams.get('mesa');
+const urlTipo   = urlParams.get('tipo');
+if (urlMesa) document.querySelector('[name=mesa]').value = urlMesa;
+if (urlTipo) { document.getElementById('tipo-select').value = urlTipo; toggleMesa(); }
+
+/* ── Si ya tiene sesión activa ─────────────────────────────── */
+if (State.token && State.usuario) {
+  document.getElementById('registro-modal').remove();
+  document.getElementById('app-main').classList.remove('hidden');
+  const wn = document.getElementById('welcome-name');
+  wn.textContent   = '👋Bienvenid@ ' + State.usuario.nombre;
+  wn.style.display = '';
+  cargarMenu();
+  setInterval(cargarMisPedidos, 8000);
+}})()
+</script>
+</body>
+</html>

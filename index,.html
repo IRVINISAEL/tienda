@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+<title>MexxicanMx</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/@zxing/library@0.19.1/umd/index.min.js"></script>
+<style>
+  :root {
+    --bg:         #0d0c0a;
+    --surface:    #161410;
+    --card:       #1e1b17;
+    --border:     #2e2a24;
+    --gold:       #c9a84c;
+    --gold-light: #e8c96a;
+    --cream:      #f5ede0;
+    --muted:      #7a6f60;
+    --error:      #e05c5c;
+    --success:    #5cb87a;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--cream);
+    font-family: 'DM Sans', sans-serif;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background:
+      radial-gradient(ellipse 70% 55% at 50% -5%, rgba(201,168,76,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 40% at 90% 90%, rgba(201,168,76,0.04) 0%, transparent 50%);
+  }
+
+  /* ═══════════════════════════════
+     VISTA ESCÁNER
+  ═══════════════════════════════ */
+  #view-scanner {
+    position: relative; z-index: 1;
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 2.5rem 1.5rem 2.5rem;
+  }
+
+  /* Marca */
+  .brand {
+    display: flex; align-items: center; gap: 0.65rem;
+    margin-bottom: 2.5rem;
+    align-self: flex-start;
+  }
+  .brand-icon {
+    width: 34px; height: 34px;
+    background: var(--gold);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem;
+  }
+  .brand-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.2rem; font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--cream);
+  }
+  .brand-name span { color: var(--gold); }
+
+  /* Hero */
+  .scanner-hero {
+    text-align: center;
+    margin-bottom: 2.2rem;
+  }
+  .scanner-hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 6vw, 2.8rem);
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: 0.55rem;
+  }
+  .scanner-hero h1 em { font-style: italic; color: var(--gold); }
+  .scanner-hero p {
+    font-size: 0.92rem;
+    color: var(--muted);
+    font-weight: 300;
+  }
+
+  /* Marco QR */
+  .qr-frame-wrap {
+    position: relative;
+    width: min(270px, 70vw);
+    margin-bottom: 1.8rem;
+  }
+  .qr-frame {
+    width: 100%; aspect-ratio: 1;
+    border-radius: 18px;
+    overflow: hidden;
+    background: var(--card);
+    position: relative;
+    box-shadow: 0 0 0 1px var(--border), 0 20px 50px rgba(0,0,0,0.6);
+  }
+
+  /* Esquinas doradas */
+  .qrc { position: absolute; width: 26px; height: 26px; border-color: var(--gold); border-style: solid; border-width: 0; z-index: 5; pointer-events: none; }
+  .qrc.tl { top:10px; left:10px; border-top-width:3px; border-left-width:3px; border-radius:4px 0 0 0; }
+  .qrc.tr { top:10px; right:10px; border-top-width:3px; border-right-width:3px; border-radius:0 4px 0 0; }
+  .qrc.bl { bottom:10px; left:10px; border-bottom-width:3px; border-left-width:3px; border-radius:0 0 0 4px; }
+  .qrc.br { bottom:10px; right:10px; border-bottom-width:3px; border-right-width:3px; border-radius:0 0 4px 0; }
+
+  /* Línea de escaneo */
+  .scan-line {
+    position: absolute; left:8%; right:8%; height:2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    box-shadow: 0 0 8px var(--gold);
+    z-index: 4; top: 8%;
+    animation: scanAnim 2.8s ease-in-out infinite;
+  }
+  @keyframes scanAnim {
+    0%   { top:8%;  opacity:1; }
+    85%  { top:84%; opacity:1; }
+    100% { top:8%;  opacity:0.2; }
+  }
+
+  .qr-placeholder {
+    width:100%; height:100%;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0.7rem;
+    background: var(--card);
+  }
+  .qr-placeholder .ph-icon { font-size: 3rem; opacity: 0.3; }
+  .qr-placeholder p { font-size:0.78rem; color:var(--muted); text-align:center; padding:0 1.2rem; }
+
+  #qr-video  { width:100%; height:100%; object-fit:cover; display:none; }
+  #qr-canvas { display:none; }
+
+  /* Resultado */
+  .qr-result {
+    width: min(270px,70vw);
+    background: rgba(92,184,122,0.1);
+    border: 1px solid rgba(92,184,122,0.35);
+    border-radius: 10px;
+    padding: 0.8rem 1rem;
+    font-size: 0.85rem;
+    color: var(--success);
+    text-align: center;
+    display: none;
+    margin-bottom: 0.9rem;
+    animation: fadeUp 0.3s ease;
+  }
+
+  /* ── BOTÓN PRINCIPAL: ESCANEAR (dorado) ── */
+  .btn-scan {
+    width: min(270px, 70vw);
+    padding: 0.95rem 1.4rem;
+    background: var(--gold);
+    color: #0d0c0a;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.97rem; font-weight: 700;
+    border: none; border-radius: 10px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 0.55rem;
+    transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+    box-shadow: 0 8px 26px rgba(201,168,76,0.28);
+    margin-bottom: 1.1rem;
+    letter-spacing: 0.02em;
+  }
+  .btn-scan:hover {
+    background: var(--gold-light);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgba(201,168,76,0.42);
+  }
+  .btn-scan:active { transform: scale(0.97); }
+  .btn-scan.scanning { background: var(--error); box-shadow: 0 8px 26px rgba(224,92,92,0.3); }
+
+  /* Divisor */
+  .divider {
+    width: min(270px,70vw);
+    display: flex; align-items: center; gap: 0.7rem;
+    margin-bottom: 0.9rem;
+  }
+  .divider::before, .divider::after { content:''; flex:1; height:1px; background:var(--border); }
+  .divider span { font-size:0.69rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.12em; white-space:nowrap; }
+
+  /* ── BOTÓN SUBIR IMAGEN QR (laptop) ── */
+  .btn-upload {
+    width: min(270px, 70vw);
+    padding: 0.78rem 1.2rem;
+    background: rgb(161, 119, 5);
+    color: var(--cream);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem; font-weight: 500;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+    transition: background 0.2s, border-color 0.2s, transform 0.15s;
+    margin-bottom: 1rem;
+  }
+  .btn-upload:hover {
+    background: rgba(201,168,76,0.13);
+    border-color: var(--gold);
+    transform: translateY(-1px);
+  }
+  .btn-upload:active { transform: scale(0.97); }
+
+  /* ── BOTÓN DUEÑO (blanco) ── */
+  .btn-owner {
+    width: min(270px, 70vw);
+    padding: 0.78rem 1.2rem;
+    background: #ffffff;
+    color: #0d0c0a;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem; font-weight: 500;
+    border: none; border-radius: 9px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+    transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+    margin-bottom: 0.5rem;
+  }
+  .btn-owner:hover {
+    background: #eeebea;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 22px rgba(0,0,0,0.45);
+  }
+  .btn-owner:active { transform: scale(0.97); }
+
+  .btn-admin-login {
+  margin-top: 0.25rem;
+  opacity: 0.92;
+}
+.btn-admin-login:hover {
+  opacity: 1;
+}
+
+  .scanner-footer {
+    margin-top: auto;
+    padding-top: 1.5rem;
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.7;
+  }
+
+  /* ═══════════════════════════════
+     VISTA REGISTRO DUEÑO
+  ═══════════════════════════════ */
+  #view-registro {
+    display: none;
+    position: fixed; inset: 0; z-index: 50;
+    background: var(--bg);
+    overflow-y: auto;
+  }
+  #view-registro::before {
+    content: ''; position: fixed; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse 60% 50% at 30% 0%, rgba(201,168,76,0.06) 0%, transparent 60%);
+  }
+
+  .reg-inner {
+    position: relative; z-index: 1;
+    max-width: 480px; margin: 0 auto;
+    padding: 2rem 1.5rem 3rem;
+  }
+
+  .reg-header { display:flex; align-items:center; gap:1rem; margin-bottom:2.2rem; }
+
+  .btn-back {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--cream);
+    font-size: 1rem; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: border-color 0.2s, background 0.2s;
+    flex-shrink: 0;
+  }
+  .btn-back:hover { border-color: var(--gold); background: rgba(201,168,76,0.06); }
+
+  .reg-header-text h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.35rem; font-weight: 700;
+  }
+  .reg-header-text p { font-size:0.8rem; color:var(--muted); margin-top:0.1rem; }
+
+  /* Dots de paso */
+  .steps { display:flex; gap:0.4rem; margin-bottom:2rem; }
+  .step-dot { flex:1; height:3px; background:var(--border); border-radius:2px; transition:background 0.3s; }
+  .step-dot.active { background: var(--gold); }
+  .step-dot.done   { background: var(--gold-light); opacity:0.6; }
+
+  /* Paneles */
+  .step-panel { display:none; }
+  .step-panel.active { display:block; animation:fadeUp 0.3s ease; }
+
+  .step-title { font-family:'Playfair Display',serif; font-size:1.1rem; font-weight:700; margin-bottom:0.3rem; }
+  .step-sub   { font-size:0.84rem; color:var(--muted); margin-bottom:1.5rem; line-height:1.55; }
+
+  /* Preview nombre */
+  .name-preview {
+    background: var(--card);
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 1.3rem;
+    text-align: center;
+    margin-bottom: 1.2rem;
+    cursor: text;
+    position: relative;
+    transition: border-color 0.2s;
+  }
+  .name-preview.has-value { border-color: var(--gold); border-style: solid; }
+  .name-preview .np-emoji { font-size: 2rem; display: block; margin-bottom: 0.4rem; }
+  .np-display {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem; font-weight: 700;
+    min-height: 1.7rem; color: var(--cream);
+  }
+  .np-display.ph { font-family:'DM Sans',sans-serif; font-weight:300; font-size:0.9rem; color:var(--muted); }
+  #inp-nombre { position:absolute; inset:0; opacity:0; cursor:text; width:100%; }
+
+  /* Campos */
+  .fgroup { margin-bottom:1.1rem; }
+  .fgroup label {
+    display:block; font-size:0.72rem; font-weight:500;
+    letter-spacing:0.1em; text-transform:uppercase;
+    color:var(--muted); margin-bottom:0.45rem;
+  }
+  .fgroup input,
+  .fgroup select,
+  .fgroup textarea {
+    width:100%; background:var(--card); border:1px solid var(--border);
+    color:var(--cream); font-family:'DM Sans',sans-serif;
+    font-size:0.92rem; padding:0.75rem 1rem;
+    border-radius:8px; outline:none;
+    transition:border-color 0.2s, box-shadow 0.2s;
+    appearance:none;
+  }
+  .fgroup textarea { resize:vertical; min-height:75px; }
+  .fgroup input::placeholder,
+  .fgroup textarea::placeholder { color:var(--muted); }
+  .fgroup input:focus,
+  .fgroup select:focus,
+  .fgroup textarea:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(201,168,76,0.12);
+  }
+  .fgroup select option { background: var(--card); }
+  .sel-wrap { position:relative; }
+  .sel-wrap::after { content:'▾'; position:absolute; right:0.9rem; top:50%; transform:translateY(-50%); pointer-events:none; color:var(--muted); font-size:0.8rem; }
+
+  .frow { display:grid; grid-template-columns:1fr 1fr; gap:0.8rem; }
+
+  /* Toggles */
+  .toggle-row {
+    display:flex; align-items:center; justify-content:space-between;
+    background:var(--card); border:1px solid var(--border);
+    border-radius:8px; padding:0.7rem 1rem; margin-bottom:0.7rem;
+  }
+  .toggle-row span { font-size:0.88rem; }
+  .toggle { width:42px; height:22px; background:var(--border); border-radius:11px; border:none; cursor:pointer; position:relative; transition:background 0.2s; }
+  .toggle.on { background: var(--gold); }
+  .toggle::after { content:''; position:absolute; top:3px; left:3px; width:16px; height:16px; background:var(--cream); border-radius:50%; transition:transform 0.2s; }
+  .toggle.on::after { transform:translateX(20px); }
+
+  /* Navegación pasos */
+  .step-nav { display:flex; gap:0.8rem; margin-top:1.4rem; }
+  .btn-prev, .btn-next {
+    padding:0.82rem 1.3rem;
+    border-radius:8px;
+    font-family:'DM Sans',sans-serif;
+    font-size:0.9rem; font-weight:500;
+    cursor:pointer; border:none;
+    transition:all 0.2s;
+  }
+  .btn-prev { background:var(--card); color:var(--cream); border:1px solid var(--border); }
+  .btn-prev:hover { border-color:var(--muted); }
+  .btn-next { flex:1; background:var(--gold); color:#0d0c0a; font-weight:700; box-shadow:0 6px 18px rgba(201,168,76,0.25); }
+  .btn-next:hover { background:var(--gold-light); transform:translateY(-1px); box-shadow:0 10px 26px rgba(201,168,76,0.38); }
+  .btn-next:active { transform:scale(0.97); }
+
+  /* Pantalla éxito */
+  #step-success { text-align:center; padding:1rem 0 2rem; }
+  .success-circle {
+    width:76px; height:76px;
+    background: rgba(201,168,76,0.1);
+    border: 2px solid var(--gold);
+    border-radius: 50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.9rem; margin:0 auto 1.4rem;
+    animation: popIn 0.5s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes popIn { from{transform:scale(0);opacity:0} to{transform:scale(1);opacity:1} }
+  #success-name {
+    font-family:'Playfair Display',serif;
+    font-size:1.5rem; font-weight:700; color:var(--gold-light);
+    margin-bottom:0.5rem;
+  }
+  #step-success p { font-size:0.88rem; color:var(--muted); margin-bottom:1.5rem; line-height:1.65; }
+  .btn-go-scan {
+    display:inline-flex; align-items:center; gap:0.5rem;
+    padding:0.88rem 1.8rem;
+    background:var(--gold); color:#0d0c0a;
+    font-family:'DM Sans',sans-serif; font-size:0.93rem; font-weight:700;
+    border:none; border-radius:8px; cursor:pointer;
+    box-shadow:0 8px 22px rgba(201,168,76,0.28);
+    transition:all 0.2s;
+  }
+  .btn-go-scan:hover { background:var(--gold-light); transform:translateY(-1px); }
+
+  /* ── Pantalla generando QR ── */
+  #step-generating { text-align:center; padding:1rem 0 2rem; }
+
+  .gen-spinner {
+    width: 70px; height: 70px;
+    border: 3px solid var(--border);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    margin: 0 auto 1.5rem;
+    animation: spin 0.9s linear infinite;
+  }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  .gen-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.2rem; font-weight: 700;
+    margin-bottom: 0.4rem;
+  }
+  .gen-sub { font-size:0.85rem; color:var(--muted); line-height:1.55; }
+
+  .gen-dots::after {
+    content: '';
+    animation: dots 1.4s steps(4, end) infinite;
+  }
+  @keyframes dots {
+    0%  { content: ''; }
+    25% { content: '.'; }
+    50% { content: '..'; }
+    75% { content: '...'; }
+  }
+
+  /* ── Pantalla QR listo ── */
+  #step-qr-ready { text-align:center; padding:0.5rem 0 2rem; }
+
+  .qr-ready-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.2rem; font-weight: 700;
+    color: var(--gold-light);
+    margin-bottom: 0.3rem;
+  }
+  .qr-ready-sub { font-size:0.82rem; color:var(--muted); margin-bottom:1.4rem; }
+
+  /* Tarjeta QR imprimible */
+  .qr-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.4rem 1.2rem 1.2rem;
+    margin-bottom: 1.4rem;
+    display: inline-block;
+    width: 100%;
+    max-width: 280px;
+    animation: popIn 0.5s cubic-bezier(0.34,1.56,0.64,1);
+  }
+
+  .qr-card-logo {
+    font-size: 0.65rem;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 0.8rem;
+  }
+
+  #qr-canvas-output {
+    display: block;
+    margin: 0 auto 0.9rem;
+    border-radius: 8px;
+  }
+
+  .qr-card-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem; font-weight: 700;
+    color: var(--cream);
+    margin-bottom: 0.2rem;
+  }
+  .qr-card-mesa {
+    font-size: 0.75rem; color: var(--muted);
+  }
+
+  /* Botones de acción QR */
+  .qr-actions {
+    display: flex; gap: 0.7rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 1.2rem;
+  }
+
+  .btn-qr-action {
+    display: flex; align-items: center; gap: 0.45rem;
+    padding: 0.75rem 1.3rem;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem; font-weight: 600;
+    cursor: pointer; border: none;
+    transition: all 0.2s;
+  }
+
+  .btn-download {
+    background: var(--gold); color: #0d0c0a;
+    box-shadow: 0 6px 18px rgba(201,168,76,0.28);
+  }
+  .btn-download:hover { background: var(--gold-light); transform:translateY(-1px); }
+
+  .btn-print {
+    background: var(--card); color: var(--cream);
+    border: 1px solid var(--border);
+  }
+  .btn-print:hover { border-color: var(--gold); background: rgba(201,168,76,0.06); }
+
+  /* Toast */
+  #toast {
+    position:fixed; bottom:1.5rem; left:50%;
+    transform:translateX(-50%) translateY(12px);
+    background:var(--card); border:1px solid var(--border);
+    color:var(--cream); padding:0.72rem 1.2rem;
+    border-radius:8px; font-size:0.86rem;
+    opacity:0; transition:all 0.3s; z-index:999;
+    pointer-events:none; white-space:nowrap; max-width:90vw;
+  }
+  #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+  /* Animaciones */
+  @keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+
+  @media(min-width:480px) {
+    #view-scanner { justify-content:center; padding-top:3rem; }
+  }
+/* ── MÓVIL PEQUEÑO (320px - 374px) ── */
+@media (max-width: 374px) {
+  .scanner-hero h1 { font-size: 1.7rem; }
+  .btn-scan, .btn-upload, .btn-owner,
+  .qr-frame-wrap, .qr-result,
+  .divider { width: 90vw; }
+  .reg-inner { padding: 1.5rem 1rem 2.5rem; }
+  .frow { grid-template-columns: 1fr; }
+  .qr-actions { flex-direction: column; align-items: center; }
+  .btn-qr-action { width: 90%; justify-content: center; }
+  .qr-card { max-width: 100%; }
+}
+
+/* ── MÓVIL NORMAL (375px - 480px) ── */
+@media (max-width: 480px) {
+  .scanner-hero { margin-bottom: 1.5rem; }
+  .scanner-hero p { font-size: 0.85rem; }
+  .reg-inner { padding: 1.5rem 1.2rem 2.5rem; }
+  .toggle-row span { font-size: 0.82rem; }
+  .step-title { font-size: 1rem; }
+  .qr-ready-title { font-size: 1.1rem; }
+}
+
+/* ── TABLET (481px - 768px) ── */
+@media (min-width: 481px) and (max-width: 768px) {
+  #view-scanner { justify-content: center; padding-top: 2rem; }
+  .reg-inner { padding: 2rem 2rem 3rem; }
+}
+
+/* ── ESCRITORIO (769px+) ── */
+@media (min-width: 769px) {
+  #view-scanner {
+    justify-content: center;
+    padding-top: 4rem;
+  }
+  .qr-frame-wrap { width: 280px; }
+  .btn-scan, .btn-upload, .btn-owner,
+  .qr-result, .divider { width: 280px; }
+  .reg-inner { padding: 2.5rem 2rem 3rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════ VISTA ESCÁNER ══════════════ -->
+<div id="view-scanner">
+
+  <!-- \ -->
+
+  <div class="scanner-hero">
+    <h1>Escanea el <em>QR</em><br>de tu mesa</h1>
+    <p>Apunta la cámara al código y haz tu pedido al instante</p>
+  </div>
+
+  <!-- Marco QR -->
+  <div class="qr-frame-wrap">
+    <div class="qr-frame" id="qr-frame">
+      <div class="qrc tl"></div><div class="qrc tr"></div>
+      <div class="qrc bl"></div><div class="qrc br"></div>
+      <div class="scan-line"></div>
+      <div class="qr-placeholder" id="qr-placeholder">
+        <p>Presiona el botón para activar la cámara</p>
+      </div>
+      <video id="qr-video" playsinline autoplay muted></video>
+    </div>
+  </div>
+  <canvas id="qr-canvas"></canvas>
+
+  <div class="qr-result" id="qr-result">✅ QR detectado — redirigiendo…</div>
+
+  <!-- Botón principal DORADO -->
+  <button class="btn-scan" id="btn-scan" onclick="toggleCamera()">
+    <span id="scan-label">Escanear QR</span>
+  </button>
+
+  <!-- Divisor laptop -->
+  <div class="divider">
+    <span>¿Tienes el QR guardado?</span>
+  </div>
+
+  <!-- Botón subir imagen QR (laptop/PC) -->
+  <button class="btn-upload" onclick="document.getElementById('qr-file-input').click()">
+    Escanear QR desde mis descargas
+  </button>
+  <input type="file" id="qr-file-input" accept="image/*" style="display:none" onchange="leerQRDesdeArchivo(this)"/>
+
+  <!-- Resultado upload -->
+  <div class="qr-result" id="qr-result-upload">✅ QR leído — redirigiendo…</div>
+
+  <!-- Divisor dueño -->
+  <div class="divider">
+    <span>¿Eres dueño de un restaurante?</span>
+  </div>
+
+  <!-- Botón secundario BLANCO -->
+  <button class="btn-owner" onclick="abrirRegistro()">
+     &nbsp;Registra tu restaurante aquí
+  </button>
+
+  <!-- Botón Login Administrador -->
+<button class="btn-owner btn-admin-login" onclick="window.location.href='login.php'">
+   &nbsp;Login de administrador
+</button>
+
+  <div class="scanner-footer">
+    RestaurantOS &nbsp;·&nbsp; Sistema multi-restaurante<br>
+    Los clientes solo necesitan escanear el QR de su mesa para ordenar
+  </div>
+
+</div>
+
+
+<!-- ══════════════ VISTA REGISTRO ══════════════ -->
+<div id="view-registro">
+  <div class="reg-inner">
+
+    <div class="reg-header">
+      <button class="btn-back" onclick="cerrarRegistro()">←</button>
+      <div class="reg-header-text">
+        <h2>Nuevo Restaurante</h2>
+        <p>Regístralo en menos de 2 minutos</p>
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step-dot active" id="dot-1"></div>
+      <div class="step-dot" id="dot-2"></div>
+      <div class="step-dot" id="dot-3"></div>
+    </div>
+
+    <!-- PASO 1: Nombre y tipo -->
+    <div class="step-panel active" id="step-1">
+      <div class="step-title">¿Cómo se llama tu restaurante?</div>
+      <p class="step-sub">Este nombre lo verán tus clientes cuando escaneen el QR de la mesa.</p>
+
+      <div class="name-preview" id="name-preview">
+        <span class="np-emoji" id="np-emoji">🏠</span>
+        <div class="np-display ph" id="np-display">Escribe el nombre aquí…</div>
+        <input type="text" id="inp-nombre" maxlength="60"
+               placeholder="Nombre del restaurante"
+               oninput="actualizarNombre(this.value)"/>
+      </div>
+
+      <div class="fgroup">
+        <label>Tipo de establecimiento</label>
+        <div class="sel-wrap">
+          <select id="inp-tipo">
+            <option value="">Seleccionar…</option>
+            <option value="🍔">🍔 Hamburguesería</option>
+            <option value="🍕">🍕 Pizzería</option>
+            <option value="🌮">🌮 Tacos / Antojitos</option>
+            <option value="🍣">🍣 Sushi / Japonés</option>
+            <option value="🥩">🥩 Parrilla / Asador</option>
+            <option value="☕">☕ Cafetería</option>
+            <option value="🍰">🍰 Pastelería</option>
+            <option value="🍜">🍜 Comida corrida</option>
+            <option value="🍽️">🍽️ Otro</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="fgroup">
+        <label>Dirección o ciudad</label>
+        <input type="text" id="inp-dir" placeholder="Ej: Av. Reforma 45, Puebla"/>
+      </div>
+
+      <div class="step-nav">
+        <button class="btn-next" onclick="paso(2)">Continuar →</button>
+      </div>
+    </div>
+
+    <!-- PASO 2: Datos del admin -->
+    <div class="step-panel" id="step-2">
+      <div class="step-title">Datos del administrador</div>
+      <p class="step-sub">Con esto podrás acceder a tu panel de control y gestionar tu negocio.</p>
+
+      <div class="frow">
+        <div class="fgroup"><label>Nombre</label><input type="text" id="inp-anombre" placeholder="Tu nombre"/></div>
+        <div class="fgroup"><label>Apellido</label><input type="text" id="inp-aapellido" placeholder="Apellido"/></div>
+      </div>
+      <div class="fgroup"><label>Teléfono</label><input type="tel" id="inp-tel" placeholder="222 123 4567"/></div>
+      <div class="fgroup"><label>Correo electrónico</label><input type="email" id="inp-email" placeholder="tu@correo.com"/></div>
+      <div class="fgroup"><label>Usuario</label><input type="text" id="inp-usuario" placeholder="Ej: admin123"/></div>
+<div class="fgroup"><label>Contraseña de acceso</label><input type="password" id="inp-pass" placeholder="Mínimo 6 caracteres"/></div>
+
+      <div class="step-nav">
+        <button class="btn-prev" onclick="paso(1)">← Atrás</button>
+        <button class="btn-next" onclick="paso(3)">Continuar →</button>
+      </div>
+    </div>
+
+    <!-- PASO 3: Config rápida -->
+    <div class="step-panel" id="step-3">
+      <div class="step-title">Configuración rápida</div>
+      <p class="step-sub">Lo básico para empezar. Todo se puede cambiar después desde tu panel.</p>
+
+      <div class="frow">
+        <div class="fgroup"><label>Número de mesas</label><input type="number" id="inp-mesas" placeholder="Ej: 10" min="1" max="500"/></div>
+        <div class="fgroup">
+          <label>Moneda</label>
+          <div class="sel-wrap">
+            <select id="inp-moneda">
+              <option value="MXN">🇲🇽 MXN</option>
+              <option value="USD">🇺🇸 USD</option>
+              <option value="EUR">🇪🇺 EUR</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="toggle-row">
+        <span>¿Acepta órdenes para llevar?</span>
+        <button class="toggle on" id="tog-llevar" onclick="toggleSwitch('tog-llevar')"></button>
+      </div>
+      <div class="toggle-row">
+        <span>¿Acepta pagos en efectivo?</span>
+        <button class="toggle on" id="tog-efectivo" onclick="toggleSwitch('tog-efectivo')"></button>
+      </div>
+
+      <div class="fgroup">
+        <label>Descripción breve (opcional)</label>
+        <textarea id="inp-desc" placeholder="Ej: Tacos tradicionales, ambiente familiar y servicio rápido…"></textarea>
+      </div>
+
+      <div class="step-nav">
+        <button class="btn-prev" onclick="paso(2)">← Atrás</button>
+        <button class="btn-next" onclick="finalizarRegistro()">✓ Crear restaurante</button>
+      </div>
+    </div>
+
+    <!-- GENERANDO QR -->
+    <div class="step-panel" id="step-generating">
+      <div class="gen-spinner"></div>
+      <div class="gen-title">Generando tu QR<span class="gen-dots"></span></div>
+      <p class="gen-sub">Estamos creando el código único<br>de tu restaurante, espera un momento.</p>
+    </div>
+
+    <!-- QR LISTO -->
+    <div class="step-panel" id="step-qr-ready">
+      <div class="qr-ready-title">¡Tu QR está listo! 🎉</div>
+      <p class="qr-ready-sub">Descárgalo e imprímelo en cada mesa de tu restaurante.</p>
+
+      <div style="display:flex;justify-content:center;">
+        <div class="qr-card" id="qr-card-printable">
+          <div class="qr-card-logo">RestaurantOS</div>
+          <canvas id="qr-canvas-output" width="200" height="200"></canvas>
+          <div class="qr-card-name" id="qr-card-name">—</div>
+          <div class="qr-card-mesa">Escanea para hacer tu pedido</div>
+        </div>
+      </div>
+
+      <div class="qr-actions">
+        <button class="btn-qr-action btn-download" onclick="descargarQR()">
+          ⬇ Descargar QR
+        </button>
+        <button class="btn-qr-action btn-print" onclick="imprimirQR()">
+          🖨 Imprimir
+        </button>
+      </div>
+
+      <button class="btn-go-scan" onclick="irAlEscaner()">📷 Ir al escáner</button>
+    </div>
+
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+  const SK = 'restaurantOS_registros';
+  const getRegs  = () => { try { return JSON.parse(localStorage.getItem(SK)) || []; } catch { return []; } };
+  const saveRegs = l => localStorage.setItem(SK, JSON.stringify(l));
+
+  let pasoActual = 1, camaraActiva = false, videoStream = null, scanInterval = null;
+
+  // ── CÁMARA ─────────────────────────────────────────────
+  async function toggleCamera() {
+    camaraActiva ? detenerCamara() : await iniciarCamara();
+  }
+
+  async function iniciarCamara() {
+    try {
+      videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      const vid = document.getElementById('qr-video');
+      vid.srcObject = videoStream;
+      vid.style.display = 'block';
+      document.getElementById('qr-placeholder').style.display = 'none';
+      camaraActiva = true;
+      document.getElementById('scan-icon').textContent  = '⏹';
+      document.getElementById('scan-label').textContent = 'Detener cámara';
+      document.getElementById('btn-scan').classList.add('scanning');
+      vid.addEventListener('loadedmetadata', () => { scanInterval = setInterval(leerQR, 300); });
+    } catch {
+      toast('⚠️ No se pudo acceder a la cámara. Revisa los permisos.');
+    }
+  }
+
+  function detenerCamara() {
+    if (videoStream) { videoStream.getTracks().forEach(t => t.stop()); videoStream = null; }
+    clearInterval(scanInterval);
+    document.getElementById('qr-video').style.display = 'none';
+    document.getElementById('qr-placeholder').style.display = 'flex';
+    camaraActiva = false;
+    document.getElementById('scan-icon').textContent  = '📷';
+    document.getElementById('scan-label').textContent = 'Escanear QR';
+    document.getElementById('btn-scan').classList.remove('scanning');
+  }
+
+  // lector ZXing — se inicializa una sola vez
+  var _zxingReader = null;
+  function getZxing() {
+    if (!_zxingReader) {
+      _zxingReader = new ZXing.BrowserQRCodeReader();
+    }
+    return _zxingReader;
+  }
+
+  function leerQR() {
+    const vid = document.getElementById('qr-video');
+    if (vid.readyState !== vid.HAVE_ENOUGH_DATA) return;
+    const can = document.getElementById('qr-canvas');
+    can.width  = vid.videoWidth;
+    can.height = vid.videoHeight;
+    const ctx  = can.getContext('2d');
+    ctx.drawImage(vid, 0, 0, can.width, can.height);
+
+    try {
+      const result = getZxing().decodeFromCanvas(can);
+      if (result && result.getText()) {
+        detenerCamara();
+        const r = document.getElementById('qr-result');
+        r.style.display = 'block';
+        r.textContent   = '✅ QR detectado — redirigiendo…';
+        const url = result.getText();
+        setTimeout(() => {
+          try { new URL(url); window.location.href = url; }
+          catch { window.location.href = 'order.html?qr=' + encodeURIComponent(url); }
+        }, 1000);
+      }
+    } catch(e) {
+      // ZXing lanza excepción cuando no encuentra QR — es normal, ignorar
+    }
+  }
+
+  // ── REGISTRO ────────────────────────────────────────────
+  function abrirRegistro() {
+    document.getElementById('view-registro').style.display = 'block';
+    document.body.style.overflow = 'hidden';
+  }
+
+  function cerrarRegistro() {
+    document.getElementById('view-registro').style.display = 'none';
+    document.body.style.overflow = '';
+    reiniciarPasos();
+  }
+
+  function irAlEscaner() { cerrarRegistro(); }
+
+  function reiniciarPasos() {
+    pasoActual = 1;
+    ['inp-nombre','inp-dir','inp-anombre','inp-aapellido','inp-tel','inp-email','inp-pass','inp-mesas','inp-desc']
+      .forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
+    actualizarNombre('');
+    mostrarPaso(1);
+  }
+
+  function paso(n) {
+    if (n > pasoActual && !validarPaso(pasoActual)) return;
+    pasoActual = n;
+    mostrarPaso(n);
+  }
+
+  function mostrarPaso(n) {
+    document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+    if (n === 'generating') {
+      document.getElementById('step-generating').classList.add('active');
+      document.querySelectorAll('.step-dot').forEach(d => { d.classList.add('done'); d.classList.remove('active'); });
+      return;
+    }
+    if (n === 'qr-ready') {
+      document.getElementById('step-qr-ready').classList.add('active');
+      return;
+    }
+    document.getElementById(`step-${n}`).classList.add('active');
+    for (let i = 1; i <= 3; i++) {
+      const d = document.getElementById(`dot-${i}`);
+      d.classList.remove('active','done');
+      if (i < n) d.classList.add('done');
+      else if (i === n) d.classList.add('active');
+    }
+  }
+
+  function validarPaso(n) {
+    if (n === 1) {
+      if (!document.getElementById('inp-nombre').value.trim()) { toast('⚠️ Escribe el nombre de tu restaurante.'); return false; }
+      if (!document.getElementById('inp-tipo').value)          { toast('⚠️ Selecciona el tipo de establecimiento.'); return false; }
+    }
+    if (n === 2) {
+      if (!document.getElementById('inp-anombre').value.trim())     { toast('⚠️ Ingresa tu nombre.'); return false; }
+      if (document.getElementById('inp-pass').value.length < 6) { toast('⚠️ La contraseña necesita mínimo 6 caracteres.'); return false; }
+    }
+    return true;
+  }
+
+  const emojis = ['🏠','🍽️','👨‍🍳','🌟','🔥','🎯','✨','🏆','🍴','⭐'];
+  let ei = 0;
+  function actualizarNombre(val) {
+    const disp  = document.getElementById('np-display');
+    const prev  = document.getElementById('name-preview');
+    const emoEl = document.getElementById('np-emoji');
+    if (val.trim()) {
+      disp.textContent = val; disp.classList.remove('ph');
+      prev.classList.add('has-value'); ei = (ei + 1) % emojis.length; emoEl.textContent = emojis[ei];
+    } else {
+      disp.textContent = 'Escribe el nombre aquí…'; disp.classList.add('ph');
+      prev.classList.remove('has-value'); emoEl.textContent = '🏠';
+    }
+  }
+
+  function toggleSwitch(id) { document.getElementById(id).classList.toggle('on'); }
+
+  let _restauranteActual = null;
+
+  async function finalizarRegistro() {
+  if (!validarPaso(2)) return;
+
+  mostrarPaso('generating');
+
+  const body = {
+    nombre:          document.getElementById('inp-nombre').value.trim(),
+    tipo:            document.getElementById('inp-tipo').value,
+    direccion:       document.getElementById('inp-dir').value.trim(),
+    descripcion:     document.getElementById('inp-desc').value.trim(),
+    mesas:           document.getElementById('inp-mesas').value || 10,
+    moneda:          document.getElementById('inp-moneda').value,
+    acepta_llevar:   document.getElementById('tog-llevar').classList.contains('on') ? 1 : 0,
+    acepta_efectivo: document.getElementById('tog-efectivo').classList.contains('on') ? 1 : 0,
+    admin_nombre:    document.getElementById('inp-anombre').value.trim(),
+    admin_apellido:  document.getElementById('inp-aapellido').value.trim(),
+    telefono:        document.getElementById('inp-tel').value.trim(),
+    email:           document.getElementById('inp-email').value.trim(),
+    usuario:         document.getElementById('inp-usuario').value.trim(),
+    password:        document.getElementById('inp-pass').value.trim(),
+  };
+
+  try {
+    const res  = await fetch('registrar.php', { method: 'POST', body: JSON.stringify(body) });
+    const json = await res.json();
+
+    if (!json.ok) { toast('⚠️ ' + json.mensaje); mostrarPaso(3); return; }
+
+    _restauranteActual = { nombre: body.nombre, token: json.token, restaurante_id: json.restaurante_id };
+    localStorage.setItem('restaurantOS_actual', JSON.stringify(_restauranteActual));
+
+    setTimeout(() => {
+      generarQR(_restauranteActual);
+      mostrarPaso('qr-ready');
+      document.getElementById('qr-card-name').textContent = body.nombre;
+    }, 2200);
+
+  } catch (e) {
+    toast('⚠️ Error al conectar con el servidor');
+    mostrarPaso(3);
+  }
+}
+
+  function generarQR(rest) {
+    const canvas = document.getElementById('qr-canvas-output');
+    canvas.width  = 400;
+    canvas.height = 400;
+    const ctx    = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const base = location.origin + location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
+    const url  = base + 'order.html?r=' + encodeURIComponent(rest.nombre) + '&rid=' + (rest.restaurante_id || '');
+
+    const tmp = document.createElement('div');
+    tmp.style.cssText = 'position:fixed;left:-9999px;top:-9999px;';
+    document.body.appendChild(tmp);
+
+    new QRCode(tmp, {
+      text: url,
+      width: 400, height: 400,
+      colorDark:  '#000000',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.H,
+    });
+
+    setTimeout(() => {
+      const qrCanvas = tmp.querySelector('canvas');
+      if (qrCanvas) {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, 400, 400);
+        ctx.drawImage(qrCanvas, 0, 0, 400, 400);
+      }
+      document.body.removeChild(tmp);
+    }, 100);
+
+    document.getElementById('qr-card-name').textContent = rest.nombre;
+  }
+
+  function descargarQR() {
+    const canvas = document.getElementById('qr-canvas-output');
+    const nombre = _restauranteActual ? _restauranteActual.nombre : 'restaurante';
+
+    // Tarjeta grande — jsQR necesita mínimo ~300px de QR para leer bien
+    const W = 800, H = 960;
+    const out = document.createElement('canvas');
+    out.width  = W; out.height = H;
+    const ctx  = out.getContext('2d');
+
+    // Fondo tarjeta
+    ctx.fillStyle = '#1e1b17';
+    ctx.fillRect(0, 0, W, H);
+
+    // Borde dorado
+    ctx.strokeStyle = '#c9a84c';
+    ctx.lineWidth   = 4;
+    ctx.strokeRect(16, 16, W - 32, H - 32);
+
+    // Logo
+    ctx.fillStyle = '#c9a84c';
+    ctx.font      = '600 28px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('RestaurantOS', W / 2, 80);
+
+    // Fondo blanco detrás del QR (con margen de 20px)
+    const qrX = 80, qrY = 110, qrS = 640;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(qrX - 20, qrY - 20, qrS + 40, qrS + 40);
+
+    // QR encima
+    ctx.drawImage(canvas, qrX, qrY, qrS, qrS);
+
+    // Nombre
+    ctx.fillStyle = '#f5ede0';
+    ctx.font      = 'bold 38px serif';
+    ctx.fillText(nombre, W / 2, 820);
+
+    // Instrucción
+    ctx.fillStyle = '#7a6f60';
+    ctx.font      = '28px sans-serif';
+    ctx.fillText('Escanea para hacer tu pedido', W / 2, 870);
+
+    const link    = document.createElement('a');
+    // La URL va codificada en el nombre del archivo — así la lectura es instantánea
+    const urlQR   = (location.origin + location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1) + 'order.html?r=' + encodeURIComponent(nombre)).replace(/[^a-zA-Z0-9._~:/?#[\]@!$&'()*+,;=%-]/g, '_');
+    link.download = `ROSQR--${nombre.replace(/\s+/g,'-')}--${btoa(encodeURIComponent(nombre))}.png`;
+    link.href     = out.toDataURL('image/png');
+    link.click();
+  }
+
+  function imprimirQR() {
+    const canvas = document.getElementById('qr-canvas-output');
+    const nombre = _restauranteActual ? _restauranteActual.nombre : 'Mi Restaurante';
+    const imgSrc = canvas.toDataURL('image/png');
+
+    const win = window.open('', '_blank', 'width=500,height=600');
+    win.document.write(`<!DOCTYPE html><html><head>
+      <title>QR — ${nombre}</title>
+      <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet"/>
+      <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{background:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:'DM Sans',sans-serif;}
+        .card{border:2px solid #c9a84c;border-radius:16px;padding:2rem 2.5rem;text-align:center;max-width:320px;width:100%;}
+        .brand{font-size:0.65rem;letter-spacing:0.18em;text-transform:uppercase;color:#c9a84c;margin-bottom:1rem;font-weight:500;}
+        img{width:200px;height:200px;display:block;margin:0 auto 1rem;border-radius:8px;}
+        h2{font-family:'Playfair Display',serif;font-size:1.3rem;color:#0d0c0a;margin-bottom:0.3rem;}
+        p{font-size:0.8rem;color:#7a6f60;}
+        @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}
+      </style></head><body>
+      <div class="card">
+        <div class="brand">RestaurantOS</div>
+        <img src="${imgSrc}" alt="QR ${nombre}"/>
+        <h2>${nombre}</h2>
+        <p>Escanea para hacer tu pedido</p>
+      </div>
+      <script>window.onload=()=>{setTimeout(()=>{window.print();},400);}<\/script>
+    </body></html>`);
+    win.document.close();
+  }
+
+  function leerQRDesdeArchivo(input) {
+    const file = input.files[0];
+    if (!file) return;
+    input.value = '';
+
+    const resultEl = document.getElementById('qr-result-upload');
+    resultEl.style.display = 'block';
+    resultEl.textContent   = '🔍 Leyendo imagen…';
+
+    // ── Método 1: leer nombre del archivo (archivos descargados desde RestaurantOS) ──
+    // Formato: ROSQR--NombreRestaurante--BASE64.png
+    const nombreArchivo = file.name;
+    const match = nombreArchivo.match(/^ROSQR--(.+)--([A-Za-z0-9+/=]+)\.png$/);
+    if (match) {
+      try {
+        const nombreRest = decodeURIComponent(atob(match[2]));
+        const base = location.origin + location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
+        const url  = base + 'order.html?r=' + encodeURIComponent(nombreRest);
+        redirigirQR(url, resultEl);
+        return;
+      } catch(e) { /* si falla el decode, continuar con otros métodos */ }
+    }
+
+    // ── Método 2: BarcodeDetector nativo del browser ──
+    const objectURL = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = function() {
+      if ('BarcodeDetector' in window) {
+        new BarcodeDetector({ formats: ['qr_code'] })
+          .detect(img)
+          .then(function(codes) {
+            URL.revokeObjectURL(objectURL);
+            if (codes.length > 0 && codes[0].rawValue) {
+              redirigirQR(codes[0].rawValue, resultEl);
+            } else {
+              mostrarErrorQR(resultEl);
+            }
+          })
+          .catch(function() {
+            URL.revokeObjectURL(objectURL);
+            mostrarErrorQR(resultEl);
+          });
+      } else {
+        URL.revokeObjectURL(objectURL);
+        mostrarErrorQR(resultEl);
+      }
+    };
+    img.onerror = function() {
+      URL.revokeObjectURL(objectURL);
+      toast('❌ No se pudo cargar la imagen.');
+    };
+    img.src = objectURL;
+  }
+
+  function mostrarErrorQR(resultEl) {
+    resultEl.style.display = 'none';
+    toast('⚠️ Solo funciona con archivos descargados desde RestaurantOS. Usa la cámara para otros QRs.');
+  }
+
+  function redirigirQR(url, resultEl) {
+    resultEl.textContent = '✅ QR leído — redirigiendo…';
+    setTimeout(function() {
+      try { new URL(url); window.location.href = url; }
+      catch(e) { window.location.href = 'order.html?qr=' + encodeURIComponent(url); }
+    }, 800);
+  }
+
+  function toast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg; el.classList.add('show');
+    clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('show'), 3200);
+  }
+</script>
+</body>
+</html>

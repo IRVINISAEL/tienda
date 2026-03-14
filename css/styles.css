@@ -1,0 +1,188 @@
+/* ============================================================
+   RESTAURANTE EL FOGÓN — Hoja de estilos global
+   Fuentes: Playfair Display (títulos) + DM Sans (cuerpo)
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500;700&display=swap');
+
+:root {
+  --gold:       #e8c07d;
+  --gold-dark:  #c9993a;
+  --bg:         #0f0f0f;
+  --bg2:        #1a1a1a;
+  --bg3:        #242424;
+  --border:     #2e2e2e;
+  --text:       #f0ece4;
+  --text-muted: #888;
+  --green:      #4caf7a;
+  --red:        #e05c5c;
+  --blue:       #5c9ce0;
+  --orange:     #e09a5c;
+  --radius:     14px;
+  --shadow:     0 8px 32px rgba(0,0,0,.45);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 16px; scroll-behavior: smooth; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,h2,h3 { font-family: 'Playfair Display', serif; }
+
+a { color: var(--gold); text-decoration: none; }
+
+/* ── Scrollbar ─────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+/* ── Buttons ───────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; gap: .5rem;
+  padding: .65rem 1.4rem; border-radius: 10px; border: none;
+  font-family: 'DM Sans', sans-serif; font-weight: 500; font-size: .9rem;
+  cursor: pointer; transition: all .2s; letter-spacing: .02em;
+}
+.btn-gold   { background: linear-gradient(135deg, var(--gold), var(--gold-dark)); color: #111; }
+.btn-ghost  { background: transparent; border: 1px solid var(--border); color: var(--text); }
+.btn-green  { background: rgba(76,175,122,.15); border: 1px solid var(--green); color: var(--green); }
+.btn-red    { background: rgba(224,92,92,.15);  border: 1px solid var(--red);   color: var(--red);   }
+.btn-blue   { background: rgba(92,156,224,.15); border: 1px solid var(--blue);  color: var(--blue);  }
+.btn:hover  { opacity: .85; transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+
+/* ── Cards ─────────────────────────────────────────────── */
+.card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.5rem;
+  box-shadow: var(--shadow);
+}
+
+/* ── Badge ─────────────────────────────────────────────── */
+.badge {
+  display: inline-block; padding: .2rem .65rem; border-radius: 99px;
+  font-size: .75rem; font-weight: 500; letter-spacing: .04em;
+}
+.badge-pendiente     { background: rgba(224,154,92,.15); color: var(--orange); border: 1px solid var(--orange); }
+.badge-en_preparacion{ background: rgba(92,156,224,.15); color: var(--blue);   border: 1px solid var(--blue);   }
+.badge-listo         { background: rgba(76,175,122,.15); color: var(--green);  border: 1px solid var(--green);  }
+.badge-entregado     { background: rgba(100,100,100,.15); color: #888;         border: 1px solid #444;          }
+.badge-cancelado     { background: rgba(224,92,92,.15);  color: var(--red);    border: 1px solid var(--red);    }
+
+/* ── Form elements ─────────────────────────────────────── */
+.form-control {
+  width: 100%; padding: .8rem 1rem; background: var(--bg);
+  border: 1px solid var(--border); border-radius: 10px;
+  color: var(--text); font-size: .95rem; outline: none;
+  font-family: 'DM Sans', sans-serif;
+  transition: border-color .2s;
+}
+.form-control:focus { border-color: var(--gold); }
+.form-label {
+  display: block; margin-bottom: .4rem; font-size: .8rem;
+  color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em;
+}
+
+/* ── Navbar ─────────────────────────────────────────────── */
+.navbar {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(15,15,15,.92); backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1rem 2rem;
+}
+.navbar-brand { font-family: 'Playfair Display', serif; color: var(--gold); font-size: 1.4rem; }
+.navbar-links  { display: flex; gap: 1rem; align-items: center; }
+
+/* ── Table ─────────────────────────────────────────────── */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th { background: var(--bg3); color: var(--text-muted); font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; padding: .75rem 1rem; text-align: left; }
+td { padding: .85rem 1rem; border-bottom: 1px solid var(--border); font-size: .9rem; }
+tr:hover td { background: rgba(255,255,255,.02); }
+
+/* ── Stats ─────────────────────────────────────────────── */
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.2rem; }
+.stat-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; }
+.stat-card .stat-value { font-family: 'Playfair Display', serif; font-size: 2.2rem; color: var(--gold); }
+.stat-card .stat-label { color: var(--text-muted); font-size: .85rem; margin-top: .25rem; }
+
+/* ── Toast ─────────────────────────────────────────────── */
+#toast-container { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999; display: flex; flex-direction: column; gap: .6rem; }
+.toast {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 1rem 1.4rem;
+  display: flex; align-items: center; gap: .75rem;
+  box-shadow: 0 8px 32px rgba(0,0,0,.5);
+  animation: slideIn .3s ease; min-width: 280px; max-width: 380px;
+}
+.toast.success { border-color: var(--green); }
+.toast.error   { border-color: var(--red); }
+.toast.info    { border-color: var(--blue); }
+@keyframes slideIn { from { transform: translateX(120%); opacity:0; } to { transform:translateX(0); opacity:1; } }
+@keyframes fadeOut { to { opacity:0; transform: translateX(60%); } }
+
+/* ── QR Page ────────────────────────────────────────────── */
+.qr-page { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 2rem; }
+.qr-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 24px; padding: 3rem 2.5rem; text-align: center;
+  width: 100%; max-width: 480px; box-shadow: var(--shadow);
+}
+.qr-card h1 { color: var(--gold); font-size: 2.2rem; margin-bottom: .5rem; }
+.qr-card p  { color: var(--text-muted); margin-bottom: 2rem; }
+
+/* ── Menu grid ─────────────────────────────────────────── */
+.menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap: 1rem; }
+.menu-item {
+  background: var(--bg2); border: 2px solid var(--border);
+  border-radius: var(--radius); padding: 1.2rem;
+  cursor: pointer; transition: all .2s; text-align: center; position: relative;
+}
+.menu-item:hover { border-color: var(--gold); transform: translateY(-2px); }
+.menu-item.selected { border-color: var(--gold); background: rgba(232,192,125,.08); }
+.menu-item .emoji  { font-size: 2.5rem; display: block; margin-bottom: .5rem; }
+.menu-item .name   { font-weight: 600; font-size: 1rem; }
+.menu-item .price  { color: var(--gold); font-size: 1.1rem; font-weight: 700; margin-top: .25rem; }
+.menu-item .qty-badge {
+  position: absolute; top: -8px; right: -8px;
+  background: var(--gold); color: #111; font-weight: 700; font-size: .75rem;
+  width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+}
+
+/* ── Cart ───────────────────────────────────────────────── */
+.cart-sidebar {
+  position: fixed; right: 0; top: 0; bottom: 0; width: 340px;
+  background: var(--bg2); border-left: 1px solid var(--border);
+  transform: translateX(100%); transition: transform .3s ease;
+  z-index: 200; display: flex; flex-direction: column;
+}
+.cart-sidebar.open { transform: translateX(0); }
+
+/* ── Pedido card (admin) ────────────────────────────────── */
+.order-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.25rem;
+  transition: border-color .3s;
+}
+.order-card.nuevo { border-color: var(--orange); animation: pulse 1.5s ease infinite; }
+@keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(224,154,92,.3); } 50% { box-shadow: 0 0 0 8px rgba(224,154,92,0); } }
+
+/* ── Responsive ─────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .navbar { padding: .75rem 1rem; }
+  .stat-grid { grid-template-columns: 1fr 1fr; }
+  .cart-sidebar { width: 100%; }
+  .menu-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 480px) {
+  .menu-grid { grid-template-columns: 1fr; }
+  .stat-grid { grid-template-columns: 1fr; }
+}

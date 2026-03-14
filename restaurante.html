@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>RestaurantOS — Sistema Multi-Restaurante</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #0d0c0a;
+    --surface: #161410;
+    --card: #1e1b17;
+    --border: #2e2a24;
+    --gold: #c9a84c;
+    --gold-light: #e8c96a;
+    --cream: #f5ede0;
+    --muted: #7a6f60;
+    --error: #e05c5c;
+    --success: #5cb87a;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--cream);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+  }
+
+  /* ── Background texture ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 70% 20%, rgba(201,168,76,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 50% at 10% 80%, rgba(201,168,76,0.04) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── Header ── */
+  header {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem 3rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .logo-icon {
+    width: 38px; height: 38px;
+    background: var(--gold);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem;
+  }
+
+  .logo-text {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--cream);
+  }
+
+  .logo-text span { color: var(--gold); }
+
+  .header-badge {
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    padding: 0.3rem 0.8rem;
+    border-radius: 100px;
+  }
+
+  /* ── Main layout ── */
+  main {
+    flex: 1;
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: calc(100vh - 73px);
+  }
+
+  /* ── LEFT: hero ── */
+  .hero {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 5rem 4rem 5rem 3rem;
+    border-right: 1px solid var(--border);
+  }
+
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.72rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: fadeUp 0.6s ease 0.1s forwards;
+  }
+
+  .eyebrow::before {
+    content: '';
+    width: 28px; height: 1px;
+    background: var(--gold);
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.4rem, 4vw, 3.8rem);
+    font-weight: 900;
+    line-height: 1.08;
+    color: var(--cream);
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    animation: fadeUp 0.6s ease 0.25s forwards;
+  }
+
+  h1 em {
+    font-style: italic;
+    color: var(--gold);
+  }
+
+  .hero-desc {
+    font-size: 1.05rem;
+    font-weight: 300;
+    color: var(--muted);
+    line-height: 1.7;
+    max-width: 420px;
+    margin-bottom: 3rem;
+    opacity: 0;
+    animation: fadeUp 0.6s ease 0.4s forwards;
+  }
+
+  .stats {
+    display: flex;
+    gap: 2.5rem;
+    opacity: 0;
+    animation: fadeUp 0.6s ease 0.55s forwards;
+  }
+
+  .stat-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--gold-light);
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-top: 0.3rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  /* ── RIGHT: form panel ── */
+  .panel {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 4rem 3rem;
+    background: var(--surface);
+  }
+
+  .card {
+    width: 100%;
+    max-width: 440px;
+    opacity: 0;
+    animation: fadeUp 0.7s ease 0.3s forwards;
+  }
+
+  .card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.7rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  .card-sub {
+    font-size: 0.9rem;
+    color: var(--muted);
+    margin-bottom: 2.5rem;
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 4px;
+    margin-bottom: 2rem;
+    gap: 4px;
+  }
+
+  .tab {
+    flex: 1;
+    padding: 0.6rem;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .tab.active {
+    background: var(--gold);
+    color: #0d0c0a;
+  }
+
+  /* Form */
+  .form-group {
+    margin-bottom: 1.2rem;
+  }
+
+  label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+  }
+
+  input, select {
+    width: 100%;
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--cream);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    padding: 0.8rem 1rem;
+    border-radius: 8px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    appearance: none;
+  }
+
+  input::placeholder { color: var(--muted); }
+
+  input:focus, select:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(201,168,76,0.12);
+  }
+
+  select option { background: var(--card); }
+
+  .input-icon-wrap {
+    position: relative;
+  }
+
+  .input-icon-wrap .icon {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1rem;
+    pointer-events: none;
+  }
+
+  /* Big restaurant name field */
+  .restaurant-name-field {
+    background: var(--card);
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    margin-bottom: 1.4rem;
+    position: relative;
+  }
+
+  .restaurant-name-field:hover,
+  .restaurant-name-field.has-value {
+    border-color: var(--gold);
+    background: rgba(201,168,76,0.04);
+  }
+
+  .restaurant-name-field .emoji { font-size: 2rem; margin-bottom: 0.5rem; }
+
+  #restaurante-nombre-display {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--cream);
+    min-height: 1.8rem;
+  }
+
+  #restaurante-nombre-display.placeholder {
+    color: var(--muted);
+    font-size: 1rem;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+  }
+
+  #restaurante-nombre-input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  /* CTA Button */
+  .btn-cta {
+    width: 100%;
+    padding: 1rem;
+    background: var(--gold);
+    color: #0d0c0a;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+    margin-top: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+  }
+
+  .btn-cta:hover {
+    background: var(--gold-light);
+    box-shadow: 0 8px 24px rgba(201,168,76,0.25);
+    transform: translateY(-1px);
+  }
+
+  .btn-cta:active { transform: scale(0.98); }
+
+  .btn-cta .arrow { font-size: 1.1rem; transition: transform 0.2s; }
+  .btn-cta:hover .arrow { transform: translateX(3px); }
+
+  /* Divider */
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 1.5rem 0;
+    color: var(--muted);
+    font-size: 0.8rem;
+  }
+
+  .divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Existing restaurant list */
+  .restaurant-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    max-height: 240px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  .restaurant-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.85rem 1rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    text-decoration: none;
+    color: var(--cream);
+  }
+
+  .restaurant-item:hover {
+    border-color: var(--gold);
+    background: rgba(201,168,76,0.05);
+  }
+
+  .restaurant-item .ri-emoji { font-size: 1.5rem; }
+
+  .ri-info { flex: 1; }
+  .ri-name {
+    font-size: 0.95rem;
+    font-weight: 500;
+  }
+  .ri-meta {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-top: 0.1rem;
+  }
+
+  .ri-badge {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    padding: 0.2rem 0.6rem;
+    border-radius: 100px;
+    text-transform: uppercase;
+  }
+
+  .badge-open { background: rgba(92,184,122,0.15); color: var(--success); }
+  .badge-closed { background: rgba(122,111,96,0.15); color: var(--muted); }
+
+  /* Toast */
+  #toast {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--cream);
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 100;
+    white-space: nowrap;
+  }
+
+  #toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* Animations */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 860px) {
+    main { grid-template-columns: 1fr; }
+    .hero {
+      padding: 3rem 1.5rem 2rem;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+    }
+    header { padding: 1.2rem 1.5rem; }
+    .panel { padding: 2.5rem 1.5rem; }
+    .stats { gap: 1.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">🍽️</div>
+    <span class="logo-text">Restaurant<span>OS</span></span>
+  </div>
+  <span class="header-badge">Sistema Multi-Restaurante</span>
+</header>
+
+<main>
+
+  <!-- LEFT: Hero -->
+  <section class="hero">
+    <div class="eyebrow">Plataforma de gestión</div>
+    <h1>Tu restaurante,<br><em>automatizado</em><br>desde hoy.</h1>
+    <p class="hero-desc">
+      Crea tu restaurante en minutos. Gestiona pedidos, menú, empleados y
+      órdenes en tiempo real — todo en un solo lugar.
+    </p>
+    <div class="stats">
+      <div>
+        <div class="stat-num" id="counter-rest">0</div>
+        <div class="stat-label">Restaurantes activos</div>
+      </div>
+      <div>
+        <div class="stat-num" id="counter-orders">0</div>
+        <div class="stat-label">Órdenes hoy</div>
+      </div>
+      <div>
+        <div class="stat-num" id="counter-up">99%</div>
+        <div class="stat-label">Disponibilidad</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RIGHT: Panel -->
+  <section class="panel">
+    <div class="card">
+      <div class="card-title">¿Cómo se llama tu restaurante?</div>
+      <p class="card-sub">Empieza registrando tu negocio o entra a uno existente.</p>
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('nuevo')">✦ Nuevo restaurante</button>
+        <button class="tab" onclick="switchTab('existente')">Acceder</button>
+      </div>
+
+      <!-- TAB: Nuevo restaurante -->
+      <div id="tab-nuevo">
+
+        <!-- Big name field -->
+        <div class="restaurant-name-field" id="name-field-wrapper">
+          <div class="emoji">🏠</div>
+          <div id="restaurante-nombre-display" class="placeholder">Escribe el nombre aquí…</div>
+          <input
+            type="text"
+            id="restaurante-nombre-input"
+            maxlength="60"
+            placeholder="Nombre del restaurante"
+            oninput="updateNameDisplay(this.value)"
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Tipo de establecimiento</label>
+          <div class="input-icon-wrap">
+            <select id="tipo">
+              <option value="">Seleccionar…</option>
+              <option>🍔 Hamburguesería</option>
+              <option>🍕 Pizzería</option>
+              <option>🌮 Tacos / Antojitos</option>
+              <option>🍣 Sushi / Japonés</option>
+              <option>🥩 Parrilla / Asador</option>
+              <option>☕ Cafetería</option>
+              <option>🍰 Pastelería</option>
+              <option>🍜 Comida corrida</option>
+              <option>🌮 Mexicano</option>
+              <option>🍽️ Otro</option>
+            </select>
+            <span class="icon">▾</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Nombre del administrador</label>
+          <input type="text" id="admin-nombre" placeholder="Tu nombre completo"/>
+        </div>
+
+        <div class="form-group">
+          <label>Contraseña de acceso</label>
+          <input type="password" id="admin-pass" placeholder="Mínimo 6 caracteres"/>
+        </div>
+
+        <button class="btn-cta" onclick="crearRestaurante()">
+          Crear mi restaurante
+          <span class="arrow">→</span>
+        </button>
+
+      </div>
+
+      <!-- TAB: Existente -->
+      <div id="tab-existente" style="display:none">
+
+        <div class="restaurant-list" id="lista-restaurantes">
+          <!-- populated by JS -->
+        </div>
+
+        <div class="divider">o ingresar manualmente</div>
+
+        <div class="form-group">
+          <label>Nombre del restaurante</label>
+          <input type="text" id="login-nombre" placeholder="Nombre exacto"/>
+        </div>
+
+        <div class="form-group">
+          <label>Contraseña</label>
+          <input type="password" id="login-pass" placeholder="Contraseña de acceso"/>
+        </div>
+
+        <button class="btn-cta" onclick="entrarRestaurante()">
+          Entrar
+          <span class="arrow">→</span>
+        </button>
+
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<div id="toast"></div>
+
+<script>
+  // ── State ──────────────────────────────────────────────────
+  const STORAGE_KEY = 'restaurantOS_registros';
+
+  function getRestaurantes() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+    catch { return []; }
+  }
+
+  function saveRestaurantes(list) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  }
+
+  // ── Animated counters ─────────────────────────────────────
+  function animCount(el, target, suffix = '') {
+    let n = 0;
+    const step = Math.ceil(target / 40);
+    const t = setInterval(() => {
+      n = Math.min(n + step, target);
+      el.textContent = n + suffix;
+      if (n >= target) clearInterval(t);
+    }, 40);
+  }
+
+  window.addEventListener('load', () => {
+    const regs = getRestaurantes();
+    animCount(document.getElementById('counter-rest'), regs.length || 3);
+    animCount(document.getElementById('counter-orders'), 127);
+    renderLista();
+  });
+
+  // ── Tabs ──────────────────────────────────────────────────
+  function switchTab(tab) {
+    document.getElementById('tab-nuevo').style.display     = tab === 'nuevo'     ? '' : 'none';
+    document.getElementById('tab-existente').style.display = tab === 'existente' ? '' : 'none';
+    document.querySelectorAll('.tab').forEach((b, i) => {
+      b.classList.toggle('active', (tab === 'nuevo' && i === 0) || (tab === 'existente' && i === 1));
+    });
+    if (tab === 'existente') renderLista();
+  }
+
+  // ── Live name display ─────────────────────────────────────
+  const emojis = ['🏠','🍽️','👨‍🍳','🌟','🔥','🎯','✨','🏆'];
+  let emojiIdx = 0;
+
+  function updateNameDisplay(val) {
+    const disp = document.getElementById('restaurante-nombre-display');
+    const wrap = document.getElementById('name-field-wrapper');
+    const emojiEl = wrap.querySelector('.emoji');
+
+    if (val.trim()) {
+      disp.textContent = val;
+      disp.classList.remove('placeholder');
+      wrap.classList.add('has-value');
+      // cycle emoji
+      emojiIdx = (emojiIdx + 1) % emojis.length;
+      emojiEl.textContent = emojis[emojiIdx];
+    } else {
+      disp.textContent = 'Escribe el nombre aquí…';
+      disp.classList.add('placeholder');
+      wrap.classList.remove('has-value');
+      emojiEl.textContent = '🏠';
+    }
+  }
+
+  // ── Crear restaurante ─────────────────────────────────────
+  function crearRestaurante() {
+    const nombre = document.getElementById('restaurante-nombre-input').value.trim();
+    const tipo   = document.getElementById('tipo').value;
+    const admin  = document.getElementById('admin-nombre').value.trim();
+    const pass   = document.getElementById('admin-pass').value;
+
+    if (!nombre) return toast('⚠️ Escribe el nombre de tu restaurante.');
+    if (!tipo)   return toast('⚠️ Elige el tipo de establecimiento.');
+    if (!admin)  return toast('⚠️ Ingresa el nombre del administrador.');
+    if (pass.length < 6) return toast('⚠️ La contraseña debe tener al menos 6 caracteres.');
+
+    const list = getRestaurantes();
+    if (list.find(r => r.nombre.toLowerCase() === nombre.toLowerCase())) {
+      return toast('⚠️ Ya existe un restaurante con ese nombre.');
+    }
+
+    const nuevo = {
+      id: Date.now(),
+      nombre,
+      tipo,
+      admin,
+      pass: btoa(pass),
+      creado: new Date().toLocaleDateString('es-MX'),
+      abierto: true,
+    };
+
+    list.push(nuevo);
+    saveRestaurantes(list);
+
+    // update counter
+    animCount(document.getElementById('counter-rest'), list.length);
+
+    toast(`✅ ¡${nombre} registrado! Redirigiendo…`, 'success');
+    setTimeout(() => {
+      localStorage.setItem('restaurantOS_actual', JSON.stringify(nuevo));
+      window.location.href = `dashboard.php?r=${encodeURIComponent(nombre)}`;
+    }, 1800);
+  }
+
+  // ── Entrar a restaurante existente ────────────────────────
+  function entrarRestaurante() {
+    const nombre = document.getElementById('login-nombre').value.trim();
+    const pass   = document.getElementById('login-pass').value;
+
+    if (!nombre || !pass) return toast('⚠️ Completa todos los campos.');
+
+    const list = getRestaurantes();
+    const rest = list.find(r => r.nombre.toLowerCase() === nombre.toLowerCase());
+
+    if (!rest) return toast('❌ Restaurante no encontrado.');
+    if (atob(rest.pass) !== pass) return toast('❌ Contraseña incorrecta.');
+
+    toast(`✅ Bienvenido a ${rest.nombre}…`);
+    setTimeout(() => {
+      localStorage.setItem('restaurantOS_actual', JSON.stringify(rest));
+      window.location.href = `dashboard.php?r=${encodeURIComponent(rest.nombre)}`;
+    }, 1500);
+  }
+
+  // ── Render lista de restaurantes ──────────────────────────
+  function renderLista() {
+    const container = document.getElementById('lista-restaurantes');
+    const list = getRestaurantes();
+
+    if (!list.length) {
+      container.innerHTML = `<p style="color:var(--muted);font-size:.85rem;text-align:center;padding:1rem 0">No hay restaurantes registrados aún.</p>`;
+      return;
+    }
+
+    container.innerHTML = list.map(r => `
+      <div class="restaurant-item" onclick="selectRestaurant('${r.nombre}')">
+        <span class="ri-emoji">${r.tipo?.split(' ')[0] || '🍽️'}</span>
+        <div class="ri-info">
+          <div class="ri-name">${r.nombre}</div>
+          <div class="ri-meta">Registrado: ${r.creado} · ${r.admin}</div>
+        </div>
+        <span class="ri-badge ${r.abierto ? 'badge-open' : 'badge-closed'}">
+          ${r.abierto ? 'Abierto' : 'Cerrado'}
+        </span>
+      </div>
+    `).join('');
+  }
+
+  function selectRestaurant(nombre) {
+    document.getElementById('login-nombre').value = nombre;
+    document.getElementById('login-pass').focus();
+  }
+
+  // ── Toast ─────────────────────────────────────────────────
+  function toast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(el._t);
+    el._t = setTimeout(() => el.classList.remove('show'), 3000);
+  }
+</script>
+</body>
+</html>

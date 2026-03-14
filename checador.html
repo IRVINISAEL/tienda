@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+  <title>Checador — RestaurantOS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --gold: #e8c07d; --gold-dark: #c9993a;
+      --bg: #0f0f0f; --bg2: #1a1a1a; --bg3: #242424;
+      --border: #2e2e2e; --text: #f0ece4; --text-muted: #888;
+      --green: #4caf7a; --red: #e05c5c; --blue: #5c9ce0; --orange: #e09a5c;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg); color: var(--text);
+      min-height: 100vh; display: flex;
+      align-items: center; justify-content: center;
+      padding: 1.5rem; -webkit-font-smoothing: antialiased;
+    }
+    h1, h2, h3 { font-family: 'Playfair Display', serif; }
+
+    .card {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 24px; padding: 2.5rem;
+      width: 100%; max-width: 420px;
+      box-shadow: 0 40px 80px rgba(0,0,0,.6);
+    }
+
+    .clock {
+      font-family: 'Playfair Display', serif;
+      font-size: 3.2rem; color: var(--gold);
+      text-align: center; letter-spacing: .04em; line-height: 1;
+    }
+    .date-txt {
+      text-align: center; color: var(--text-muted);
+      margin-top: .4rem; margin-bottom: 2rem; font-size: .88rem;
+    }
+
+    .toggle {
+      display: flex; background: var(--bg3);
+      border-radius: 12px; padding: .3rem; margin-bottom: 1.75rem;
+    }
+    .mode-btn {
+      flex: 1; padding: .65rem; border: none; background: none;
+      color: var(--text-muted); border-radius: 9px;
+      cursor: pointer; font-size: .95rem; transition: all .2s;
+      font-family: 'DM Sans', sans-serif; font-weight: 500;
+    }
+    .mode-btn.active { background: var(--gold); color: #111; font-weight: 700; }
+
+    .form-label {
+      display: block; margin-bottom: .45rem; font-size: .78rem;
+      color: var(--text-muted); text-transform: uppercase; letter-spacing: .07em;
+    }
+    .form-group { margin-bottom: 1.2rem; }
+
+    /* Select estilizado */
+    .form-select {
+      width: 100%; padding: .85rem 1rem;
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 10px; color: var(--text);
+      font-size: 1rem; font-family: 'DM Sans', sans-serif;
+      outline: none; cursor: pointer; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 1rem center;
+      transition: border-color .2s;
+    }
+    .form-select:focus { border-color: var(--gold); }
+    .form-select option { background: var(--bg2); }
+
+    /* PIN visual */
+    .pin-wrap { position: relative; }
+    .pin-input {
+      width: 100%; padding: .85rem 1rem;
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 10px; color: var(--text);
+      font-size: 1.4rem; font-family: monospace;
+      letter-spacing: .3em; outline: none;
+      transition: border-color .2s; text-align: center;
+    }
+    .pin-input:focus { border-color: var(--gold); }
+
+    .extra-box {
+      background: rgba(232,192,125,.08); border: 1px solid rgba(232,192,125,.3);
+      border-radius: 12px; padding: 1rem;
+      display: flex; align-items: center; gap: .75rem;
+      margin-bottom: 1.5rem;
+    }
+    .extra-box input[type=checkbox] {
+      width: 22px; height: 22px; accent-color: var(--gold); flex-shrink: 0; cursor: pointer;
+    }
+
+    .btn-registrar {
+      width: 100%; padding: 1rem;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      color: #111; font-family: 'DM Sans', sans-serif;
+      font-weight: 700; font-size: 1.05rem;
+      border: none; border-radius: 12px;
+      cursor: pointer; transition: all .2s; letter-spacing: .03em;
+    }
+    .btn-registrar:hover { opacity: .9; transform: translateY(-1px); }
+    .btn-registrar:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+    /* Resultado */
+    .result {
+      display: none; background: var(--bg3);
+      border-radius: 16px; padding: 1.5rem;
+      margin-top: 1.5rem; text-align: center;
+      animation: fadeUp .4s ease;
+    }
+    .result.show { display: block; }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+
+    .result-icon { font-size: 3rem; margin-bottom: .6rem; }
+    .result-name { font-family: 'Playfair Display', serif; font-size: 1.3rem; color: var(--gold); margin-bottom: .4rem; }
+    .result-msg  { color: var(--text-muted); font-size: .9rem; }
+
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; margin-top: 1rem; }
+    .info-cell { background: var(--bg2); border-radius: 10px; padding: .85rem; text-align: center; }
+    .info-cell .lbl { color: var(--text-muted); font-size: .75rem; margin-bottom: .3rem; }
+    .info-cell .val { font-weight: 700; font-size: 1rem; }
+
+    /* Cargando empleados */
+    .loading-emp {
+      text-align: center; color: var(--text-muted);
+      padding: .75rem; font-size: .85rem;
+    }
+
+    @media (max-width: 480px) {
+      .card  { padding: 1.75rem 1.25rem; }
+      .clock { font-size: 2.6rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <!-- Header -->
+  <div style="text-align:center;margin-bottom:1.5rem">
+    <h1 style="color:var(--gold);font-size:1.8rem" id="rest-nombre">🍽️ RestaurantOS</h1>
+    <p style="color:var(--text-muted);font-size:.82rem">Sistema de asistencia</p>
+  </div>
+
+  <!-- Reloj -->
+  <div class="clock"  id="reloj">00:00:00</div>
+  <div class="date-txt" id="fecha-hoy"></div>
+
+  <!-- Toggle entrada / salida -->
+  <div class="toggle">
+    <button class="mode-btn active" id="btn-entrada" onclick="setMode('entrada')">📥 Entrada</button>
+    <button class="mode-btn"        id="btn-salida"  onclick="setMode('salida')">📤 Salida</button>
+  </div>
+
+  <!-- Selector de empleado -->
+  <div class="form-group">
+    <label class="form-label">👤 ¿Quién eres?</label>
+    <select id="emp-select" class="form-select">
+      <option value="">— Selecciona tu nombre —</option>
+    </select>
+    <div class="loading-emp" id="emp-loading">Cargando empleados...</div>
+  </div>
+
+  <!-- PIN -->
+  <div class="form-group">
+    <label class="form-label">🔒 Tu PIN</label>
+    <input id="pin-input" class="pin-input" type="password"
+           placeholder="••••" maxlength="6" inputmode="numeric"
+           autocomplete="off">
+  </div>
+
+  <!-- Horas extra (solo en salida) -->
+  <div class="extra-box" id="extra-box" style="display:none">
+    <input type="checkbox" id="hora-extra">
+    <div>
+      <div style="font-weight:600;color:var(--gold)">🕐 Horas extra</div>
+      <div style="font-size:.8rem;color:var(--text-muted)">Se pagan al 1.5× del sueldo/hora</div>
+    </div>
+  </div>
+
+  <!-- Botón -->
+  <button class="btn-registrar" id="btn-registrar" onclick="registrar()">
+    Registrar asistencia →
+  </button>
+
+  <!-- Botón regresar -->
+  <button onclick="window.location.href='dashboard.php'" style="width:100%;padding:.85rem;margin-top:.75rem;background:transparent;border:1px solid var(--border);border-radius:12px;color:var(--text);font-family:'DM Sans',sans-serif;font-weight:500;font-size:1rem;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text)'">
+    ← Regresar
+  </button>
+
+  <!-- Resultado -->
+  <div class="result" id="result">
+    <div class="result-icon" id="res-icon">✅</div>
+    <div class="result-name" id="res-name"></div>
+    <div class="result-msg"  id="res-msg"></div>
+    <div id="res-extra"></div>
+  </div>
+</div>
+
+<script>
+let modoActual = 'entrada';
+
+// ── Nombre del restaurante desde localStorage ─────────────────
+(function() {
+  try {
+    const rest = JSON.parse(localStorage.getItem('restaurantOS_actual'));
+    if (rest && rest.nombre) {
+      document.getElementById('rest-nombre').textContent = '🍽️ ' + rest.nombre;
+      document.title = 'Checador — ' + rest.nombre;
+    }
+  } catch(e) {}
+})();
+
+// ── Reloj ────────────────────────────────────────────────────
+function tick() {
+  const now = new Date();
+  document.getElementById('reloj').textContent =
+    now.toLocaleTimeString('es-MX', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+  document.getElementById('fecha-hoy').textContent =
+    now.toLocaleDateString('es-MX', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+}
+tick(); setInterval(tick, 1000);
+
+// ── Toggle modo ───────────────────────────────────────────────
+function setMode(mode) {
+  modoActual = mode;
+  document.getElementById('btn-entrada').classList.toggle('active', mode === 'entrada');
+  document.getElementById('btn-salida').classList.toggle('active',  mode === 'salida');
+  document.getElementById('extra-box').style.display = mode === 'salida' ? 'flex' : 'none';
+  document.getElementById('result').classList.remove('show');
+}
+
+// ── Cargar lista de empleados ─────────────────────────────────
+async function cargarEmpleados() {
+  try {
+    const r   = await fetch('./empleados.php?accion=lista');
+    const res = await r.json();
+    const sel = document.getElementById('emp-select');
+    document.getElementById('emp-loading').style.display = 'none';
+
+    if (!res.ok || !res.data || !res.data.length) {
+      sel.innerHTML = '<option value="">— Sin empleados registrados —</option>';
+      return;
+    }
+
+    sel.innerHTML = '<option value="">— Selecciona tu nombre —</option>' +
+      res.data.map(e =>
+        `<option value="${e.id}">${e.nombre} ${e.apellido} · ${e.puesto}</option>`
+      ).join('');
+
+  } catch {
+    document.getElementById('emp-loading').textContent = '⚠️ No se pudo cargar la lista';
+  }
+}
+cargarEmpleados();
+
+// ── Registrar ─────────────────────────────────────────────────
+async function registrar() {
+  const empId     = document.getElementById('emp-select').value;
+  const pin       = document.getElementById('pin-input').value.trim();
+  const horaExtra = document.getElementById('hora-extra').checked;
+  const btn       = document.getElementById('btn-registrar');
+
+  if (!empId) { mostrarError('Selecciona tu nombre'); return; }
+  if (!pin)   { mostrarError('Ingresa tu PIN');       return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Registrando...';
+
+  try {
+    const r = await fetch(`./empleados.php?accion=${modoActual}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ empleado_id: empId, pin, hora_extra: horaExtra })
+    });
+
+    const texto = await r.text();
+    let res;
+    try { res = JSON.parse(texto); }
+    catch { mostrarError('Error del servidor: ' + texto.substring(0, 80)); return; }
+
+    const result = document.getElementById('result');
+    result.classList.add('show');
+
+    if (res.ok) {
+      const d = res.data;
+      document.getElementById('res-icon').textContent = modoActual === 'entrada' ? '👋' : '👍';
+      document.getElementById('res-name').textContent = d.empleado || '';
+      document.getElementById('res-msg').textContent  = res.mensaje;
+
+      if (modoActual === 'salida' && d.horas) {
+        document.getElementById('res-extra').innerHTML = `
+          <div class="info-grid">
+            <div class="info-cell"><div class="lbl">Entrada</div><div class="val">${d.entrada}</div></div>
+            <div class="info-cell"><div class="lbl">Salida</div><div class="val">${d.salida}</div></div>
+            <div class="info-cell"><div class="lbl">Horas trabajadas</div><div class="val" style="color:var(--gold)">${d.horas}h</div></div>
+            <div class="info-cell"><div class="lbl">Pago del día</div><div class="val" style="color:var(--green)">$${d.pago_total}</div></div>
+          </div>`;
+      } else {
+        document.getElementById('res-extra').innerHTML = '';
+      }
+      document.getElementById('pin-input').value = '';
+      document.getElementById('emp-select').value = '';
+
+    } else {
+      document.getElementById('res-icon').textContent = '❌';
+      document.getElementById('res-name').textContent = 'Error';
+      document.getElementById('res-msg').textContent  = res.mensaje;
+      document.getElementById('res-extra').innerHTML  = '';
+    }
+
+  } catch(err) {
+    mostrarError('Sin conexión al servidor');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Registrar asistencia →';
+  }
+}
+
+function mostrarError(msg) {
+  const result = document.getElementById('result');
+  result.classList.add('show');
+  document.getElementById('res-icon').textContent = '⚠️';
+  document.getElementById('res-name').textContent = 'Atención';
+  document.getElementById('res-msg').textContent  = msg;
+  document.getElementById('res-extra').innerHTML  = '';
+}
+
+document.getElementById('pin-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') registrar();
+});
+</script>
+</body>
+</html>
