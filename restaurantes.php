@@ -14,4 +14,21 @@ if ($accion === 'nombre') {
     exit;
 }
 
+if ($accion === 'buscar') {
+    $nombre = trim($_GET['nombre'] ?? '');
+    if (!$nombre) { echo json_encode(['ok' => false, 'data' => []]); exit; }
+
+    $stmt = db()->prepare(
+        "SELECT id, nombre, tipo, direccion 
+         FROM restaurantes 
+         WHERE nombre LIKE ? AND activo = 1 
+         ORDER BY nombre ASC 
+         LIMIT 5"
+    );
+    $stmt->execute(['%' . $nombre . '%']);
+    $resultados = $stmt->fetchAll();
+    echo json_encode(['ok' => true, 'data' => $resultados]);
+    exit;
+}
+
 echo json_encode(['ok' => false, 'mensaje' => 'Acción no reconocida']);

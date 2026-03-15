@@ -467,7 +467,7 @@ $admin['restaurante_nombre'] = $restaurante['nombre'] ?? 'Mi Restaurante';
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <script>
-const BASE = '.';
+const BASE = '/tienda';
 const fmt = n => new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}).format(n);
 let todosLosPedidos = [];
 let estadoFiltro = '';
@@ -501,9 +501,16 @@ document.getElementById('fecha-display').textContent = new Date().toLocaleDateSt
 let prevCount = 0;
 async function cargarPedidos(){
   try{
-    const r=await fetch(`${BASE}/pedidos.php?accion=todos_pedidos&fecha=${(()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')})()}`);
+    const r=await fetch(`${BASE}/pedidos.php?accion=todos_pedidos&fecha=${(()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')})()}`,{credentials:'include'});
     const res=await r.json();
-    if(!res.ok)return;
+    if(!res.ok){
+      document.getElementById('orders-grid').innerHTML =
+        '<div style="grid-column:1/-1;text-align:center;padding:3rem;color:#e05c5c">'
+        + '❌ ' + (res.mensaje || 'Error de sesión')
+        + ' — <a href="login.php" style="color:#e8c07d">Volver a iniciar sesión</a>'
+        + '</div>';
+      return; 
+    }
     todosLosPedidos=res.data;
 
     // Notificación sonora si hay pedidos nuevos
@@ -566,7 +573,7 @@ function renderPedidos(pedidos,filtro){
 
 async function cambiarEstado(id,estado){
   try{
-    const r=await fetch(`${BASE}/pedidos.php?accion=actualizar_estado`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({pedido_id:id,estado})});
+    const r=await fetch(`${BASE}/pedidos.php?accion=actualizar_estado`,{method:'PUT',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({pedido_id:id,estado})});
     const res=await r.json();
     if(!res.ok){toast(res.mensaje,'error');return;}
     toast('Estado actualizado ✓','success');
@@ -658,7 +665,7 @@ async function crearPlatillo(){
     categoria:   document.getElementById('mi-cat').value,
     imagen:      imagenUrl
   };
-  const r   = await fetch(`${BASE}/menu.php?accion=crear`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
+  const r = await fetch(`${BASE}/menu.php?accion=crear`, { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body:JSON.stringify(data) });
   const res = await r.json();
   if (!res.ok){ toast(res.mensaje,'error'); return; }
   toast('Platillo creado ✓','success');
@@ -669,7 +676,7 @@ async function crearPlatillo(){
 }
 
 async function toggleDisponible(id,actual){
-  await fetch(`${BASE}/menu.php?accion=toggle`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,disponible:!actual})});
+  await fetch(`${BASE}/menu.php?accion=toggle`,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({id,disponible:!actual})});
   cargarMenuAdmin();
 }
 

@@ -193,12 +193,12 @@ switch ($accion) {
 
         if (!$nombre || !$apell || strlen($pin) < 4) responder(false, null, 'Datos incompletos');
 
-        $token = generarToken(16);
+        $token   = generarToken(16);
+        $pinHash = password_hash($pin, PASSWORD_DEFAULT);
         db()->prepare(
             "INSERT INTO empleados (nombre, apellido, puesto, pin, sueldo_hora, hora_extra_mult, token_qr)
              VALUES (?, ?, ?, ?, ?, ?, ?)"
-        )$pinHash = password_hash($pin, PASSWORD_DEFAULT);
-->execute([$nombre, $apell, $puesto, $pinHash, $sueldo, $mult, $token]);
+        )->execute([$nombre, $apell, $puesto, $pinHash, $sueldo, $mult, $token]);
 
         responder(true, ['token_qr' => $token], 'Empleado registrado correctamente');
 

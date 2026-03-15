@@ -6,9 +6,6 @@ if (!empty($_SESSION['admin_id'])) {
     header('Location: dashboard.php'); exit;
 }
 
-// Regenerar ID de sesión para evitar session fixation
-session_regenerate_id(true);
-
 $error = '';
 $ip    = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? 'unknown';
 
@@ -36,12 +33,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($admin && password_verify($password, $admin['password'])) {
                 // Login exitoso
                 limpiarIntentos($ip);
-                session_regenerate_id(true);
-                $_SESSION['admin_id']                 = $admin['id'];
-                $_SESSION['admin']                    = $admin;
-                $_SESSION['admin']['restaurante_id']  = $admin['restaurante_id'];
-                $_SESSION['login_time']               = time();
-                $_SESSION['login_ip']                 = $ip;
+                session_regenerate_id(true);  // ← aquí sí, después de verificar
+                $_SESSION['admin_id']      = $admin['id'];
+                $_SESSION['admin']         = $admin;        // ← agrega esta línea
+                $_SESSION['login_time']    = time();
+                $_SESSION['last_activity'] = time();
+                $_SESSION['last_rotation'] = time();
+                $_SESSION['login_ip']      = $_SERVER['REMOTE_ADDR'] ?? '';
                 header('Location: dashboard.php');
                 exit;
             }

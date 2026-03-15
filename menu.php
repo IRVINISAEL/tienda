@@ -10,6 +10,10 @@ header('Content-Type: application/json; charset=utf-8');
 require_once __DIR__ . '/config.php';
 if (session_status() === PHP_SESSION_NONE) session_start();
 
+// DEBUG TEMPORAL - borrar después
+error_log("SESSION en menu.php: " . json_encode($_SESSION));
+error_log("admin_id: " . ($_SESSION['admin_id'] ?? 'NO EXISTE'));
+
 $method = $_SERVER['REQUEST_METHOD'];
 $accion = $_GET['accion'] ?? '';
 $body   = json_decode(file_get_contents('php://input'), true) ?? [];
@@ -19,9 +23,16 @@ switch ($accion) {
     case 'lista':
         header('Cache-Control: public, max-age=60');
         $restaurante_id = null;
+
+        // Prioridad 1: admin en sesión
         if (!empty($_SESSION['admin'])) {
             $restaurante_id = $_SESSION['admin']['restaurante_id'];
         }
+        // Prioridad 2: rid desde URL (clientes en order.html)
+        if (!$restaurante_id && !empty($_GET['rid'])) {
+            $restaurante_id = (int)$_GET['rid'];
+        }
+
         if ($restaurante_id) {
             $stmt = db()->prepare("SELECT * FROM menu WHERE restaurante_id = ? AND disponible = 1 ORDER BY categoria, nombre");
             $stmt->execute([$restaurante_id]);

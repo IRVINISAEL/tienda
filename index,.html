@@ -15,7 +15,7 @@
     --gold:       #c9a84c;
     --gold-light: #e8c96a;
     --cream:      #f5ede0;
-    --muted:      #7a6f60;
+    --muted:      #ffffff;
     --error:      #e05c5c;
     --success:    #5cb87a;
   }
@@ -24,12 +24,21 @@
 
   html, body {
     height: 100%;
-    background: var(--bg);
+    background-image: url('listo.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: scroll;
     color: var(--cream);
     font-family: 'DM Sans', sans-serif;
     overflow-x: hidden;
-  }
+}
 
+@media (min-width: 769px) {
+    html, body {
+        background-attachment: fixed;
+    }
+}
   body::before {
     content: '';
     position: fixed; inset: 0; pointer-events: none; z-index: 0;
@@ -587,10 +596,9 @@
   <!-- \ -->
 
   <div class="scanner-hero">
-    <h1>Escanea el <em>QR</em><br>de tu mesa</h1>
-    <p>Apunta la cámara al código y haz tu pedido al instante</p>
-  </div>
-
+    <h1>Mexxican <em>Mx</em></h1>
+    <p>¡Bienvenido! Escanea el QR de tu mesa<br>y disfruta de tu pedido</p>
+  </div> 
   <!-- Marco QR -->
   <div class="qr-frame-wrap">
     <div class="qr-frame" id="qr-frame">
@@ -605,6 +613,15 @@
   </div>
   <canvas id="qr-canvas"></canvas>
 
+  <div id="btn-flip-camara" style="display:none;width:min(270px,70vw);text-align:right;margin-bottom:0.4rem;">
+    <span onclick="flipCamara()" 
+          style="font-size:0.78rem;color:#c9a84c;cursor:pointer;opacity:0.85;transition:opacity 0.2s;"
+          onmouseover="this.style.opacity='1'"
+          onmouseout="this.style.opacity='0.85'">
+        🔄 Cambiar cámara
+    </span>
+</div>
+
   <div class="qr-result" id="qr-result">✅ QR detectado — redirigiendo…</div>
 
   <!-- Botón principal DORADO -->
@@ -612,14 +629,42 @@
     <span id="scan-label">Escanear QR</span>
   </button>
 
-  <!-- Divisor laptop -->
-  <div class="divider">
-    <span>¿Tienes el QR guardado?</span>
-  </div>
+  <!-- Buscar restaurante por nombre -->
+    <div class="divider">
+        <span>¿Estás en un restaurante?</span>
+    </div>
+
+    <div style="width:min(270px,70vw);display:flex;gap:0.5rem;margin-bottom:1rem;">
+        <input 
+            type="text" 
+            id="inp-buscar-rest" 
+            placeholder="Nombre del restaurante…"
+            style="flex:1;background:#1e1b17;border:1px solid #2e2a24;color:#f5ede0;
+                  font-family:'DM Sans',sans-serif;font-size:0.88rem;padding:0.75rem 1rem;
+                  border-radius:9px;outline:none;transition:border-color 0.2s;"
+            onfocus="this.style.borderColor='#c9a84c'"
+            onblur="this.style.borderColor='#2e2a24'"
+            onkeydown="if(event.key==='Enter') buscarRestaurante()"
+        />
+        <button 
+            onclick="buscarRestaurante()"
+            style="background:#c9a84c;color:#0d0c0a;border:none;border-radius:9px;
+                  padding:0.75rem 1rem;font-weight:700;cursor:pointer;font-size:0.88rem;
+                  transition:background 0.2s;"
+            onmouseover="this.style.background='#e8c96a'"
+            onmouseout="this.style.background='#c9a84c'"
+        >Buscar</button>
+    </div>
+    <div id="buscar-resultado" style="width:min(270px,70vw);display:none;margin-bottom:1rem;"></div>
+
+    <!-- Divisor laptop -->
+    <div class="divider">
+        <span>¿Tienes el QR guardado?</span>
+    </div>
 
   <!-- Botón subir imagen QR (laptop/PC) -->
   <button class="btn-upload" onclick="document.getElementById('qr-file-input').click()">
-    Escanear QR desde mis descargas
+    Escanea tu QR desde tu Laptop o Ideapad
   </button>
   <input type="file" id="qr-file-input" accept="image/*" style="display:none" onchange="leerQRDesdeArchivo(this)"/>
 
@@ -638,11 +683,12 @@
 
   <!-- Botón Login Administrador -->
 <button class="btn-owner btn-admin-login" onclick="window.location.href='login.php'">
-   &nbsp;Login de administrador
+     &nbsp;Iniciar Sesión <br>
+    <span style="display:block; font-size:0.72rem; font-weight:300; opacity:0.7; margin-top:2px;">Solo administradores</span>
 </button>
 
   <div class="scanner-footer">
-    RestaurantOS &nbsp;·&nbsp; Sistema multi-restaurante<br>
+    MexxicanMx &nbsp;·&nbsp; Sistema multi-restaurante<br>
     Los clientes solo necesitan escanear el QR de su mesa para ordenar
   </div>
 
@@ -812,6 +858,7 @@
   const saveRegs = l => localStorage.setItem(SK, JSON.stringify(l));
 
   let pasoActual = 1, camaraActiva = false, videoStream = null, scanInterval = null;
+let camaraActual = 'environment';
 
   // ── CÁMARA ─────────────────────────────────────────────
   async function toggleCamera() {
@@ -820,7 +867,8 @@
 
   async function iniciarCamara() {
     try {
-      videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: camaraActual } });
+document.getElementById('btn-flip-camara').style.display = 'block';
       const vid = document.getElementById('qr-video');
       vid.srcObject = videoStream;
       vid.style.display = 'block';
@@ -839,7 +887,7 @@
     if (videoStream) { videoStream.getTracks().forEach(t => t.stop()); videoStream = null; }
     clearInterval(scanInterval);
     document.getElementById('qr-video').style.display = 'none';
-    document.getElementById('qr-placeholder').style.display = 'flex';
+    document.getElementById('btn-flip-camara').style.display = 'none';
     camaraActiva = false;
     document.getElementById('scan-icon').textContent  = '📷';
     document.getElementById('scan-label').textContent = 'Escanear QR';
@@ -1186,6 +1234,61 @@
       catch(e) { window.location.href = 'order.html?qr=' + encodeURIComponent(url); }
     }, 800);
   }
+
+  async function buscarRestaurante() {
+    const inp = document.getElementById('inp-buscar-rest');
+    const nombre = inp.value.trim();
+    const resultDiv = document.getElementById('buscar-resultado');
+
+    if (!nombre) {
+        resultDiv.style.display = 'none';
+        toast('⚠️ Escribe el nombre del restaurante');
+        return;
+    }
+
+    resultDiv.style.display = 'block';
+    resultDiv.innerHTML = '<div style="color:#7a6f60;font-size:0.85rem;text-align:center;padding:0.5rem">🔍 Buscando...</div>';
+
+    try {
+        const res  = await fetch(`restaurantes.php?accion=buscar&nombre=${encodeURIComponent(nombre)}`);
+        const json = await res.json();
+
+        if (!json.ok || !json.data || json.data.length === 0) {
+            resultDiv.innerHTML = '<div style="color:#e05c5c;font-size:0.83rem;text-align:center;padding:0.5rem">⚠️ No se encontró ningún restaurante con ese nombre</div>';
+            return;
+        }
+
+        resultDiv.innerHTML = json.data.map(r => `
+            <div onclick="entrarAlRestaurante(${r.id}, '${r.nombre.replace(/'/g,"\\'")}') "
+                 style="background:#1e1b17;border:1px solid #2e2a24;border-radius:9px;
+                        padding:0.85rem 1rem;margin-bottom:0.5rem;cursor:pointer;
+                        display:flex;justify-content:space-between;align-items:center;
+                        transition:border-color 0.2s;"
+                 onmouseover="this.style.borderColor='#c9a84c'"
+                 onmouseout="this.style.borderColor='#2e2a24'">
+                <div>
+                    <div style="font-weight:600;font-size:0.92rem">${r.nombre}</div>
+                    <div style="font-size:0.75rem;color:#7a6f60;margin-top:2px">${r.tipo || ''} ${r.direccion ? '· '+r.direccion : ''}</div>
+                </div>
+                <span style="color:#c9a84c;font-size:1.1rem">→</span>
+            </div>
+        `).join('');
+
+    } catch(e) {
+        resultDiv.innerHTML = '<div style="color:#e05c5c;font-size:0.83rem;text-align:center;padding:0.5rem">⚠️ Error al conectar con el servidor</div>';
+    }
+}
+
+function entrarAlRestaurante(id, nombre) {
+    const base = location.origin + location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
+    window.location.href = base + 'order.html?r=' + encodeURIComponent(nombre) + '&rid=' + id;
+}
+
+  async function flipCamara() {
+    camaraActual = camaraActual === 'environment' ? 'user' : 'environment';
+    detenerCamara();
+    await iniciarCamara();
+}
 
   function toast(msg) {
     const el = document.getElementById('toast');

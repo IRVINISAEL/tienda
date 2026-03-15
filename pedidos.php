@@ -2,21 +2,20 @@
 // ============================================================
 //  pedidos.php — API REST de Pedidos
 // ============================================================
+require_once __DIR__ . '/config.php';
 if (session_status() === PHP_SESSION_NONE) session_start();
+
 $allowedOrigins = ['http://localhost', 'http://127.0.0.1'];
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
 if (in_array($origin, $allowedOrigins)) {
     header("Access-Control-Allow-Origin: $origin");
     header('Access-Control-Allow-Credentials: true');
-}
+}   
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
 header('Content-Type: application/json; charset=utf-8');
 
-// Responder preflight CORS
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(200); exit; }
-
-require_once __DIR__ . '/config.php';
 
 $method  = $_SERVER['REQUEST_METHOD'];
 $accion  = $_GET['accion'] ?? '';
@@ -122,8 +121,8 @@ switch ($accion) {
         $stmt = db()->prepare(
             "SELECT p.*, GROUP_CONCAT(CONCAT(pi.cantidad,'x ',m.nombre) SEPARATOR ', ') AS resumen
              FROM pedidos p
-             JOIN pedido_items pi ON pi.pedido_id = p.id
-             JOIN menu m ON m.id = pi.menu_id
+             LEFT JOIN pedido_items pi ON pi.pedido_id = p.id
+            LEFT JOIN menu m ON m.id = pi.menu_id
              WHERE p.usuario_id = ?
              GROUP BY p.id ORDER BY p.creado_en DESC LIMIT 10"
         );
