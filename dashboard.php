@@ -22,6 +22,7 @@ $admin['restaurante_nombre'] = $restaurante['nombre'] ?? 'Mi Restaurante';
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>MexxicanMx <?= htmlspecialchars($admin['restaurante_nombre'] ?? 'Mi Restaurante') ?></title>
+  <link rel="icon" href="favicon.ico">
   <style>
     /* ── Google Fonts ── */
     @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500;700&display=swap');
@@ -207,7 +208,7 @@ $admin['restaurante_nombre'] = $restaurante['nombre'] ?? 'Mi Restaurante';
   <!-- ═══ SIDEBAR ════════════════════════════════════════════ -->
   <aside class="sidebar">
     <div class="sidebar-logo" style="display:flex;align-items:center;justify-content:center;gap:.5rem;flex-wrap:wrap">
-  <span id="logo-restaurante">🍽️</span>
+  <span id="logo-restaurante"></span>
   <span><?= htmlspecialchars($admin['restaurante_nombre'] ?? 'Mi Restaurante') ?></span>
   <button onclick="showModal('modal-editar-restaurante')" style="background:rgba(232,192,125,.15);border:1px solid rgba(232,192,125,.3);color:var(--gold);border-radius:6px;padding:.2rem .45rem;font-size:.7rem;cursor:pointer" title="Editar">✏️</button>
 </div>
@@ -422,21 +423,21 @@ $admin['restaurante_nombre'] = $restaurante['nombre'] ?? 'Mi Restaurante';
 <!-- MODAL EDITAR RESTAURANTE -->
 <div class="modal-overlay" id="modal-editar-restaurante">
   <div class="card" style="max-width:480px;width:100%;max-height:90vh;overflow-y:auto">
-    <h3 style="margin-bottom:1.5rem">✏️ Personalizar restaurante</h3>
+    <h3 style="margin-bottom:1.5rem"> Personalizar restaurante</h3>
 
     <!-- Logo imagen -->
-    <div style="margin-bottom:1.5rem">
+    <!-- <div style="margin-bottom:1.5rem">
       <label class="form-label">Logo del restaurante (PNG, JPG)</label>
       <div style="display:flex;gap:1rem;align-items:center">
         <div id="logo-img-preview" style="width:64px;height:64px;border-radius:12px;border:2px solid var(--border);background:var(--bg3);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">
-          <span style="font-size:1.8rem">🍽️</span>
+          <span style="font-size:1.8rem">🍽️/</span>
         </div>
         <div style="flex:1">
           <input type="file" id="logo-img-file" accept="image/*" class="form-control" style="padding:.5rem">
           <div style="font-size:.75rem;color:var(--text-muted);margin-top:.3rem">Se mostrará en el sidebar del dashboard</div>
         </div>
       </div>
-    </div>
+    </div> -->
 
     <!-- Imagen de fondo del menú -->
     <div style="margin-bottom:1.5rem">
@@ -756,18 +757,20 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ── PERSONALIZAR RESTAURANTE ─────────────────────────────────
-document.getElementById('logo-img-file').addEventListener('change', function() {
-  const file = this.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    const preview = document.getElementById('logo-img-preview');
-    preview.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover">`;
-    // Guardar temporalmente en memoria para cuando guarde
-    window._logoImgData = e.target.result;
-  };
-  reader.readAsDataURL(file);
-});
+const logoFileEl = document.getElementById('logo-img-file');
+if (logoFileEl) {
+  logoFileEl.addEventListener('change', function() {
+    const file = this.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      const preview = document.getElementById('logo-img-preview');
+      if (preview) preview.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover">`;
+      window._logoImgData = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
 
 document.getElementById('hero-img-file').addEventListener('change', function() {
   const file = this.files[0];
@@ -789,6 +792,7 @@ function guardarPersonalizacion() {
   }
   if (window._heroBgData) {
     localStorage.setItem(KEY_HERO, window._heroBgData);
+    localStorage.setItem('ros_hero_bg', window._heroBgData);
   }
   const slogan = document.getElementById('edit-slogan').value;
   if (slogan) localStorage.setItem(KEY_SLOGAN, slogan);

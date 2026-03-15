@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MexxicanMx</title>
+<link rel="icon" type="image/png" href="favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --gold: #c9a84c;
+  --gold-light: #e8c96a;
+  --gold-dim: rgba(201,168,76,0.12);
+  --bg: #0d0c0a;
+  --bg2: #161410;
+  --bg3: #1e1b17;
+  --bg4: #252118;
+  --border: #2e2a24;
+  --cream: #f5ede0;
+  --muted: #7a6f60;
+  --red: #e05c5c;
+  --green: #5cb87a;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--cream);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,h2,h3,h4 { font-family: 'Playfair Display', serif; }
+
+/* ── NAV ── */
+.nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(13,12,10,0.92);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1rem 2rem;
+}
+.nav-brand {
+  font-family: 'Playfair Display', serif;
+  color: var(--gold); font-size: 1.3rem; font-weight: 700;
+}
+.nav-tabs { display: flex; gap: 0.5rem; }
+.nav-tab {
+  padding: 0.5rem 1.2rem; border-radius: 99px;
+  border: 1px solid var(--border); background: transparent;
+  color: var(--muted); cursor: pointer; font-size: 0.85rem;
+  font-family: 'DM Sans', sans-serif; transition: all 0.2s;
+}
+.nav-tab.active, .nav-tab:hover {
+  background: var(--gold); color: #0d0c0a;
+  border-color: var(--gold); font-weight: 600;
+}
+
+/* ── HERO ── */
+.hero {
+  text-align: center;
+  padding: 5rem 2rem 3rem;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 60% 50% at 50% 0%, rgba(201,168,76,0.1) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero-badge {
+  display: inline-block;
+  background: var(--gold-dim);
+  border: 1px solid rgba(201,168,76,0.3);
+  color: var(--gold); font-size: 0.75rem;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  padding: 0.35rem 1rem; border-radius: 99px;
+  margin-bottom: 1.5rem;
+}
+.hero h1 {
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  font-weight: 900; line-height: 1.05;
+  margin-bottom: 1rem;
+}
+.hero h1 em { color: var(--gold); font-style: italic; }
+.hero p {
+  font-size: 1.1rem; color: var(--muted);
+  max-width: 500px; margin: 0 auto 2.5rem;
+  line-height: 1.7;
+}
+.hero-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+.btn-primary {
+  padding: 0.85rem 2rem; border-radius: 10px;
+  background: var(--gold); color: #0d0c0a;
+  font-weight: 700; font-size: 0.95rem;
+  border: none; cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  transition: all 0.2s; text-decoration: none;
+  display: inline-flex; align-items: center; gap: 0.5rem;
+}
+.btn-primary:hover { background: var(--gold-light); transform: translateY(-2px); }
+.btn-secondary {
+  padding: 0.85rem 2rem; border-radius: 10px;
+  background: transparent; color: var(--cream);
+  font-weight: 500; font-size: 0.95rem;
+  border: 1px solid var(--border); cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  transition: all 0.2s; text-decoration: none;
+  display: inline-flex; align-items: center; gap: 0.5rem;
+}
+.btn-secondary:hover { border-color: var(--gold); color: var(--gold); }
+
+/* ── SECCIONES ── */
+.section { display: none; padding: 2rem 1.5rem 5rem; max-width: 860px; margin: 0 auto; }
+.section.active { display: block; }
+
+/* ── STEPS ── */
+.steps-header {
+  text-align: center; margin-bottom: 3rem;
+}
+.steps-header h2 { font-size: 2rem; margin-bottom: 0.5rem; }
+.steps-header p { color: var(--muted); font-size: 0.95rem; }
+
+.step-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 1.2rem;
+  display: flex; gap: 1.5rem; align-items: flex-start;
+  transition: border-color 0.2s;
+  animation: fadeUp 0.4s ease both;
+}
+.step-card:hover { border-color: rgba(201,168,76,0.3); }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.step-num {
+  width: 48px; height: 48px; flex-shrink: 0;
+  background: var(--gold-dim);
+  border: 1px solid rgba(201,168,76,0.35);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Playfair Display', serif;
+  font-size: 1.3rem; font-weight: 700; color: var(--gold);
+}
+.step-body h3 {
+  font-size: 1.1rem; font-weight: 700; margin-bottom: 0.4rem;
+}
+.step-body p {
+  color: var(--muted); font-size: 0.9rem; line-height: 1.6;
+}
+.step-body .tip {
+  margin-top: 0.75rem;
+  background: rgba(201,168,76,0.07);
+  border-left: 3px solid var(--gold);
+  padding: 0.6rem 0.85rem;
+  border-radius: 0 8px 8px 0;
+  font-size: 0.83rem; color: var(--cream);
+}
+.step-body .tip strong { color: var(--gold); }
+
+/* ── ICON STEPS ── */
+.step-icon {
+  width: 48px; height: 48px; flex-shrink: 0;
+  font-size: 1.6rem;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ── DIVIDER ── */
+.divider {
+  display: flex; align-items: center; gap: 1rem;
+  margin: 2.5rem 0;
+}
+.divider::before, .divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--border);
+}
+.divider span {
+  color: var(--muted); font-size: 0.75rem;
+  letter-spacing: 0.1em; text-transform: uppercase;
+}
+
+/* ── FAQ ── */
+.faq-item {
+  border: 1px solid var(--border);
+  border-radius: 12px; margin-bottom: 0.75rem;
+  overflow: hidden;
+}
+.faq-q {
+  width: 100%; text-align: left;
+  background: var(--bg3); border: none; color: var(--cream);
+  padding: 1.1rem 1.5rem;
+  font-family: 'DM Sans', sans-serif; font-size: 0.95rem; font-weight: 500;
+  cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+  transition: background 0.2s;
+}
+.faq-q:hover { background: var(--bg4); }
+.faq-q .arrow { color: var(--gold); font-size: 1.1rem; transition: transform 0.2s; }
+.faq-q.open .arrow { transform: rotate(180deg); }
+.faq-a {
+  display: none; padding: 0 1.5rem 1.1rem;
+  color: var(--muted); font-size: 0.9rem; line-height: 1.65;
+  background: var(--bg3);
+}
+.faq-a.open { display: block; }
+
+/* ── ROLES CARD ── */
+.role-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2.5rem; }
+.role-card {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 14px; padding: 1.5rem; text-align: center;
+  cursor: pointer; transition: all 0.2s;
+  text-decoration: none; color: var(--cream);
+  display: block;
+}
+.role-card:hover { border-color: var(--gold); transform: translateY(-3px); }
+.role-card .role-icon { font-size: 2.5rem; margin-bottom: 0.75rem; display: block; }
+.role-card h3 { font-size: 1.1rem; margin-bottom: 0.3rem; }
+.role-card p { font-size: 0.82rem; color: var(--muted); }
+.role-card.gold { border-color: rgba(201,168,76,0.4); background: var(--gold-dim); }
+
+/* ── FLOW DIAGRAM ── */
+.flow {
+  display: flex; align-items: center; gap: 0.5rem;
+  margin: 1.5rem 0; flex-wrap: wrap;
+}
+.flow-step {
+  background: var(--bg4); border: 1px solid var(--border);
+  border-radius: 8px; padding: 0.5rem 0.9rem;
+  font-size: 0.82rem; color: var(--cream);
+  display: flex; align-items: center; gap: 0.4rem;
+}
+.flow-arrow { color: var(--gold); font-size: 1rem; }
+
+/* ── HIGHLIGHT BOX ── */
+.highlight {
+  background: var(--gold-dim);
+  border: 1px solid rgba(201,168,76,0.25);
+  border-radius: 12px; padding: 1.25rem 1.5rem;
+  margin: 1.5rem 0;
+}
+.highlight h4 { color: var(--gold); margin-bottom: 0.4rem; font-size: 0.95rem; }
+.highlight p { color: var(--cream); font-size: 0.88rem; line-height: 1.6; }
+
+/* ── BADGE STATES ── */
+.badge {
+  display: inline-block; padding: 0.2rem 0.7rem;
+  border-radius: 99px; font-size: 0.75rem; font-weight: 600;
+}
+.badge-pending { background: rgba(224,154,92,0.15); color: #e09a5c; border: 1px solid #e09a5c; }
+.badge-prep    { background: rgba(92,156,224,0.15); color: #5c9ce0; border: 1px solid #5c9ce0; }
+.badge-ready   { background: rgba(92,184,122,0.15); color: #5cb87a; border: 1px solid #5cb87a; }
+.badge-done    { background: rgba(100,100,100,0.15); color: #888; border: 1px solid #555; }
+
+/* ── FOOTER ── */
+.footer {
+  text-align: center; padding: 2rem;
+  border-top: 1px solid var(--border);
+  color: var(--muted); font-size: 0.8rem;
+}
+
+/* ── RESPONSIVE ── */
+@media(max-width: 600px) {
+  .nav { padding: 0.75rem 1rem; }
+  .nav-brand { font-size: 1.1rem; }
+  .nav-tab { padding: 0.4rem 0.8rem; font-size: 0.78rem; }
+  .hero { padding: 3rem 1rem 2rem; }
+  .step-card { flex-direction: column; gap: 1rem; }
+  .role-grid { grid-template-columns: 1fr; }
+  .section { padding: 1.5rem 1rem 4rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <a class="nav-brand" href="index,.html">MexxicanMx</a>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showSection('inicio')">Inicio</button>
+    <button class="nav-tab" onclick="showSection('cliente')">Cliente</button>
+    <button class="nav-tab" onclick="showSection('dueno')">Dueño</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div id="sec-inicio" class="section active" style="max-width:860px">
+  <div class="hero" style="padding:4rem 0 2rem">
+    <div class="hero-badge">Guía de uso</div>
+    <h1>Bienvenido a <em>MexxicanMx</em></h1>
+    <p>El sistema que conecta a tus clientes con tu cocina en tiempo real. Sin apps, sin complicaciones.</p>
+    <div class="hero-btns">
+      <a href="#" class="btn-primary" onclick="showSection('cliente')"> Soy cliente</a>
+      <a href="#" class="btn-secondary" onclick="showSection('dueno')"> Soy dueño</a>
+    </div>
+  </div>
+
+  <!-- <div class="role-grid" style="margin-top:1rem">
+    <a class="role-card gold" href="#" onclick="showSection('cliente')">
+      <span class="role-icon">📱</span>
+      <h3>Para clientes</h3>
+      <p>Escanea, ordena y sigue tu pedido sin hablar con nadie</p>
+    </a>
+    <a class="role-card" href="#" onclick="showSection('dueno')">
+      <span class="role-icon">🏪</span>
+      <h3>Para dueños</h3>
+      <p>Registra tu restaurante, gestiona menú y recibe pedidos en vivo</p>
+    </a>
+  </div> -->
+
+  <div class="highlight">
+    <h4>¿Cómo funciona en general?</h4>
+    <p>El dueño registra su restaurante y genera códigos QR para cada mesa. El cliente escanea el QR, se registra con su nombre y hace su pedido directamente desde el celular. El dashboard del dueño recibe el pedido al instante.</p>
+  </div>
+
+  <div class="flow">
+    <div class="flow-step">🏪 Dueño registra restaurante</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">📱 Genera QR por mesa</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">🧑 Cliente escanea</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">🛒 Hace su pedido</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">👨‍🍳 Cocina lo recibe</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">✅ Entregado</div>
+  </div>
+</div>
+
+<!-- SECCIÓN CLIENTE -->
+<div id="sec-cliente" class="section">
+  <div class="steps-header">
+    <div class="hero-badge">Para clientes</div>
+    <h2>Cómo hacer tu pedido</h2>
+    <p>Solo necesitas tu celular. Sin descargar apps, sin crear cuentas.</p>
+  </div>
+
+  <div class="step-card" style="animation-delay:0.05s">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <h3>Escanea el código QR de tu mesa</h3>
+      <p>Cada mesa tiene un código QR impreso. Abre la cámara de tu celular y apúntala al código. Se abrirá automáticamente el menú del restaurante en tu navegador.</p>
+      <div class="tip"><strong>Sin celular o QR dañado:</strong> Pide al mesero el link directo o busca el restaurante por nombre en la pantalla de inicio de MexxicanMx.</div>
+    </div>
+  </div>
+
+  <div class="step-card" style="animation-delay:0.1s">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <h3>Regístrate con tu nombre</h3>
+      <p>Escribe tu nombre, selecciona si es en mesa o para llevar, y confirma el número de mesa. Eso es todo — no necesitas correo ni contraseña.</p>
+      <div class="tip"><strong>Para llevar:</strong> Selecciona "Para llevar" en el tipo de orden y ordena sin ocupar mesa.</div>
+    </div>
+  </div>
+
+  <div class="step-card" style="animation-delay:0.15s">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <h3>Elige tus platillos</h3>
+      <p>Navega el menú, filtra por categoría (comida, bebida, postre) y toca cualquier platillo para agregarlo a tu orden. Puedes agregar varios del mismo o de diferentes platillos.</p>
+      <div class="tip"><strong>Notas especiales:</strong> Antes de enviar puedes escribir instrucciones como "sin chile", "sin cebolla" o cualquier modificación.</div>
+    </div>
+  </div>
+
+  <div class="step-card" style="animation-delay:0.2s">
+    <div class="step-num">4</div>
+    <div class="step-body">
+      <h3>Envía tu pedido</h3>
+      <p>Revisa tu carrito, confirma el total y presiona <strong>"Enviar pedido"</strong>. Tu orden llega directamente a la cocina en ese instante.</p>
+    </div>
+  </div>
+
+  <div class="step-card" style="animation-delay:0.25s">
+    <div class="step-num">5</div>
+    <div class="step-body">
+      <h3>Sigue el estado de tu pedido</h3>
+      <p>Ve a la pestaña <strong>"Mis pedidos"</strong> para ver en qué estado va tu orden. Los estados son:</p>
+      <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.75rem">
+        <span class="badge badge-pending">⏳ Pendiente</span>
+        <span class="badge badge-prep">👨‍🍳 En preparación</span>
+        <span class="badge badge-ready">✅ Listo</span>
+        <span class="badge badge-done">🎉 Entregado</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"><span>Preguntas frecuentes del cliente</span></div>
+
+  <div class="faq-item">
+    <button class="faq-q" onclick="toggleFaq(this)">
+      ¿Necesito descargar una app? <span class="arrow">▾</span>
+    </button>
+    <div class="faq-a">No. Todo funciona desde el navegador de tu celular. Solo escanea el QR y listo.</div>
+  </div>
+
+  <div class="faq-item">
+    <button class="faq-q" onclick="toggleFaq(this)">
+      ¿Puedo hacer varios pedidos seguidos? <span class="arrow">▾</span>
+    </button>
+    <div class="faq-a">Sí. Puedes enviar tantos pedidos como quieras durante tu visita. Cada uno aparecerá en "Mis pedidos".</div>
+  </div>
+
+  <div class="faq-item">
+    <button class="faq-q" onclick="toggleFaq(this)">
+      ¿Y si no tengo celular o no funciona la cámara? <span class="arrow">▾</span>
+    </button>
+    <div class="faq-a">Pide al mesero que te proporcione el link directo al menú, o acércate a la pantalla de inicio de MexxicanMx y busca el restaurante por nombre.</div>
+  </div>
+
+  <div class="faq-item">
+    <button class="faq-q" onclick="toggleFaq(this)">
+      ¿Mis datos quedan guardados? <span class="arrow">▾</span>
+    </button>
+    <div class="faq-a">Solo se guarda tu nombre para identificar tu pedido durante la visita. No se almacenan datos personales permanentemente.</div>
+  </div>
+</div>
+
+<!-- SECCIÓN DUEÑO -->
+<div id="sec-dueno" class="section">
+  <div class="steps-header">
+    <div class="hero-badge" style="background:rgba(201,168,76,0.08)">Para dueños</div>
+    <h2>Cómo usar tu panel</h2>
+    <p>Desde registrar tu restaurante hasta gestionar pedidos en tiempo real.</p>
+  </div>
+
+  <!-- BLOQUE 1: REGISTRO -->
+  <h3 style="color:var(--gold);margin-bottom:1rem;font-size:1rem;letter-spacing:0.05em;text-transform:uppercase">Primeros pasos</h3>
+
+  <div class="step-card">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <h3>Registra tu restaurante</h3>
+      <p>Ve a la pantalla de inicio de MexxicanMx y presiona <strong>"Registra tu restaurante aquí"</strong>. Llena el formulario en 3 pasos: nombre y tipo, datos del administrador con tu usuario y contraseña, y configuración básica (mesas, moneda, si aceptas órdenes para llevar).</p>
+      <div class="tip"><strong>Solo toma 2 minutos.</strong> Al terminar recibirás un código QR listo para imprimir.</div>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <h3>Inicia sesión en tu panel</h3>
+      <p>Ve a la pantalla de inicio y presiona <strong>"Iniciar Sesión — Solo administradores"</strong>. Ingresa el usuario y contraseña que elegiste al registrarte. Entrarás directamente a tu dashboard.</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <h3>Agrega tus platillos al menú</h3>
+      <p>En el dashboard, ve a la sección <strong>Menú</strong> y presiona <strong>"Agregar platillo"</strong>. Llena nombre, descripción, precio, categoría y emoji. Opcionalmente puedes subir una foto del platillo.</p>
+      <div class="tip"><strong>Categorías disponibles:</strong> Comida, Bebida, Postre, Extra. Tus clientes pueden filtrar por categoría.</div>
+    </div>
+  </div>
+
+  <div class="divider"><span>Operación diaria</span></div>
+
+  <h3 style="color:var(--gold);margin-bottom:1rem;font-size:1rem;letter-spacing:0.05em;text-transform:uppercase">Gestión del día a día</h3>
+
+  <div class="step-card">
+    <div class="step-icon">📱</div>
+    <div class="step-body">
+      <h3>Genera y coloca los QR de mesa</h3>
+      <p>En el dashboard ve a la sección <strong>Menú → Pedidos en vivo</strong>. Desde el panel de QR genera uno por mesa ingresando el número, descárgalo e imprímelo. Colócalo en cada mesa físicamente.</p>
+      <div class="tip">También puedes generar un QR para órdenes "para llevar" y colocarlo en la entrada del restaurante.</div>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-icon">📋</div>
+    <div class="step-body">
+      <h3>Recibe pedidos en tiempo real</h3>
+      <p>El dashboard se actualiza automáticamente cada 15 segundos. Los pedidos nuevos aparecen con una animación naranja pulsante. Verás el nombre del cliente, mesa, items y total de cada orden.</p>
+      <div class="tip"><strong>Filtra por estado:</strong> Usa los botones de filtro para ver solo los pendientes, en preparación o listos.</div>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-icon">👨‍🍳</div>
+    <div class="step-body">
+      <h3>Actualiza el estado de los pedidos</h3>
+      <p>Cada tarjeta de pedido tiene botones de acción. El flujo normal es:</p>
+      <div class="flow" style="margin:0.75rem 0">
+        <span class="badge badge-pending">Pendiente</span>
+        <span class="flow-arrow">→</span>
+        <span class="badge badge-prep">En preparación</span>
+        <span class="flow-arrow">→</span>
+        <span class="badge badge-ready">Listo</span>
+        <span class="flow-arrow">→</span>
+        <span class="badge badge-done">Entregado</span>
+      </div>
+      <p>También puedes cancelar un pedido si es necesario.</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-icon">👥</div>
+    <div class="step-body">
+      <h3>Registra y controla empleados</h3>
+      <p>En la sección <strong>Asistencia</strong> puedes crear empleados con nombre, puesto, PIN de acceso y sueldo por hora. Ellos usan el <strong>Checador</strong> para registrar entradas y salidas con su PIN.</p>
+      <div class="tip">El sistema calcula automáticamente horas trabajadas, horas extra y pago total por día y semana.</div>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-icon">💰</div>
+    <div class="step-body">
+      <h3>Genera el corte de caja</h3>
+      <p>Al final del día ve a <strong>Corte de caja</strong>, selecciona la fecha y presiona <strong>"Ver corte"</strong>. Verás el total de ventas en mesa, para llevar, el gran total del día y los platillos más vendidos.</p>
+      <div class="tip">Puedes imprimir el corte directamente desde el navegador con el botón <strong>🖨️ Imprimir corte</strong>.</div>
+    </div>
+  </div>
+
+  <div class="divider"><span>Preguntas frecuentes del dueño</span></div>
+
+  <div class="faq-item">
+    <button class="faq-q" onclick="toggleFaq(this)">
+      ¿Puedo tener varios restaurantes con la misma cuenta? <span class="arrow">▾</span>
+    </button>
+    <div class="faq-a">No, cada restaurante tiene su propio administrador con usuario y contraseña independientes. Si tienes dos restaurantes, crea dos registros diferentes.</div>
+  </div>
+
+  <div class="faq-item">
+    <button class="faq-q" onclick="toggleFaq(this)">
+      ¿Cómo desactivo un platillo sin borrarlo? <span class="arrow">▾</span>
+    </button>
+    <div class="faq-a">En la sección Menú, cada platillo tiene un botón "Desactivar". El platillo deja de aparecer a los clientes pero permanece en tu lista para reactivarlo cuando quieras.</div>
+  </div>
+
+  <div class="faq-item">
+    <button class="faq-q" onclick="toggleFaq(this)">
+      ¿Los clientes pagan en la app? <span class="arrow">▾</span>
+    </button>
+    <div class="faq-a">No, MexxicanMx es un sistema de órdenes, no de pagos. El cobro se realiza como siempre lo hagas en tu restaurante (efectivo, terminal, etc.).</div>
+  </div>
+
+  <div class="faq-item">
+    <button class="faq-q" onclick="toggleFaq(this)">
+      ¿Qué pasa si el QR de una mesa se pierde o daña? <span class="arrow">▾</span>
+    </button>
+    <div class="faq-a">Puedes generar e imprimir un nuevo QR para esa mesa en cualquier momento desde el dashboard. El proceso tarda menos de un minuto.</div>
+  </div>
+
+  <div class="faq-item">
+    <button class="faq-q" onclick="toggleFaq(this)">
+      ¿Puedo personalizar el menú con imagen de fondo? <span class="arrow">▾</span>
+    </button>
+    <div class="faq-a">Sí. En el dashboard, presiona el ícono ✏️ junto al nombre de tu restaurante. Puedes subir una imagen de fondo para el banner del menú y agregar un slogan.</div>
+  </div>
+
+  <div class="faq-item">
+    <button class="faq-q" onclick="toggleFaq(this)">
+      ¿La sesión del admin expira? <span class="arrow">▾</span>
+    </button>
+    <div class="faq-a">Sí, por seguridad la sesión expira después de 30 minutos de inactividad o después de 8 horas continuas. Simplemente vuelve a iniciar sesión.</div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="footer">
+  MexxicanMx &nbsp;·&nbsp; Sistema multi-restaurante &nbsp;·&nbsp; Guía de uso v1.0
+</footer>
+
+<script>
+function showSection(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('sec-' + name).classList.add('active');
+  const idx = ['inicio','cliente','dueno'].indexOf(name);
+  document.querySelectorAll('.nav-tab')[idx]?.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function toggleFaq(btn) {
+  const isOpen = btn.classList.contains('open');
+  // Cerrar todos
+  document.querySelectorAll('.faq-q').forEach(b => b.classList.remove('open'));
+  document.querySelectorAll('.faq-a').forEach(a => a.classList.remove('open'));
+  if (!isOpen) {
+    btn.classList.add('open');
+    btn.nextElementSibling.classList.add('open');
+  }
+}
+</script>
+</body>
+</html>

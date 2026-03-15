@@ -64,9 +64,32 @@ if (empty($_SESSION['csrf_token'])) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Acceso — RestaurantOS</title>
+  <title>MexxicanMx</title>
+  <link rel="icon" href="favicon.ico">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@300;400;500;700&display=swap');
+
+    .bg-overlay {
+    position: relative;
+      }
+
+      .bg-overlay::before {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 0, 0, 0.45); /* oscurece el fondo */
+          backdrop-filter: blur(2px);      /* difumina un poco */
+          z-index: 1;
+      }
+
+      .bg-overlay > * {
+          position: relative;
+          z-index: 2; /* trae el formulario al frente */
+      }
+
     :root {
       --gold: #e8c07d; --gold-dark: #c9993a;
       --bg: #0f0f0f; --bg2: #1a1a1a; --bg3: #242424;
@@ -76,10 +99,16 @@ if (empty($_SESSION['csrf_token'])) {
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'DM Sans', sans-serif;
-      background: var(--bg); color: var(--text);
-      min-height: 100vh; display: flex;
-      align-items: center; justify-content: center;
-      padding: 1rem;
+      background-image: url('usuario.png');
+      background-size: cover;        /* La imagen cubre toda la pantalla */
+      background-position: center;   /* Centrada */
+      background-repeat: no-repeat;  /* No se repite */
+      background-attachment: fixed;  /* Fija al hacer scroll */
+
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       -webkit-font-smoothing: antialiased;
     }
     h1, h2 { font-family: 'Playfair Display', serif; }
@@ -130,15 +159,15 @@ if (empty($_SESSION['csrf_token'])) {
     }
   </style>
 </head>
-<body>
+<body class="bg-overlay">
 <div class="login-box">
   <div class="login-logo">
     <h1>MexxicanMx</h1>
-    <p>Panel de administración</p>
+    <p>Escribe tu Usuario y tu Contraseña</p>
   </div>
 
   <?php if ($error): ?>
-    <div class="error-msg">⚠️ <?= htmlspecialchars($error) ?></div>
+    <div class="error-msg"> <?= htmlspecialchars($error) ?></div>
   <?php endif; ?>
 
   <form method="POST" onsubmit="this.querySelector('.btn-login').disabled=true">
@@ -156,11 +185,12 @@ if (empty($_SESSION['csrf_token'])) {
       <label>Contraseña</label>
       <input type="password" name="password" placeholder="••••••••"
              autocomplete="current-password" required maxlength="100">
-      <p class="aviso">⚠️ Los accesos no autorizados son monitoreados y reportados. Cualquier sospecha de no autorizacion sera investigado</p>
+      <p class="aviso"> Los accesos no autorizados son monitoreados y reportados. Cualquier sospecha de no autorizacion sera investigado</p>
     </div>
 
     <button type="submit" class="btn-login">Entrar →</button>
   </form>
+  <a href="index,.html" style="display:block;text-align:center;margin-top:1rem;padding:.85rem;border:1px solid var(--border);border-radius:10px;color:var(--text-muted);font-size:.9rem;transition:all .2s;text-decoration:none;" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">← Volver</a>
 </div>
 </body>
 </html>

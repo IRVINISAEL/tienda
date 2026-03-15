@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ordenar</title>
+  <link rel="icon" href="favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
   <style>
@@ -248,14 +249,17 @@
 <!-- ═══ NAVBAR ═══════════════════════════════════════════════ -->
 <nav class="navbar">
   <span class="navbar-brand" style="display:flex;align-items:center;gap:.6rem">
-  <span id="logo-nav" style="display:flex;align-items:center"></span>
-  <span id="nombre-restaurante-nav">...</span>
-</span>
+    <span id="logo-nav" style="display:flex;align-items:center"></span>
+    <span id="nombre-restaurante-nav">...</span>
+  </span>
   <div class="navbar-links">
     <span class="welcome-badge" id="welcome-name" style="display:none"></span>
     <button id="cart-toggle" class="btn btn-gold" style="position:relative">
       Mi Orden
       <span id="cart-badge" style="background:#e05c5c;color:#fff;font-size:.7rem;font-weight:700;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;position:absolute;top:-8px;right:-8px">0</span>
+    </button>
+    <button onclick="cerrarSesionCliente()" class="btn btn-ghost" style="font-size:.85rem">
+      Salir
     </button>
   </div>
 </nav>
@@ -282,11 +286,66 @@
         </div>
       </div>
 
+      <!-- ═══ ESTRELLAS DEL RESTAURANTE ═══ -->
+<div id="rating-bar" style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.5rem;flex-wrap:wrap">
+  <div id="stars-display" style="display:flex;gap:2px;font-size:1.3rem"></div>
+  <span id="rating-text" style="color:var(--text-muted);font-size:0.88rem"></span>
+  <button id="btn-calificar" onclick="abrirCalificacion()" 
+    style="display:none;margin-left:auto;padding:0.4rem 1rem;background:var(--gold-dim);
+           border:1px solid rgba(201,168,76,0.35);color:var(--gold);border-radius:99px;
+           font-size:0.8rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s"
+    onmouseover="this.style.background='rgba(201,168,76,0.2)'"
+    onmouseout="this.style.background='var(--gold-dim)'">
+    ⭐ Calificar
+  </button>
+</div>
+
+<!-- MODAL CALIFICACIÓN -->
+<div id="modal-calificacion" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);
+     z-index:500;align-items:center;justify-content:center;padding:1rem">
+  <div style="background:#1e1b17;border:1px solid #2e2a24;border-radius:18px;
+              padding:2rem;max-width:360px;width:100%;text-align:center">
+    <h3 style="font-family:'Playfair Display',serif;color:#e8c07d;margin-bottom:0.3rem">
+      ¿Cómo fue tu experiencia?
+    </h3>
+    <p style="color:#7a6f60;font-size:0.85rem;margin-bottom:1.5rem" id="modal-rest-nombre"></p>
+
+    <!-- Estrellas interactivas -->
+    <div id="stars-input" style="display:flex;justify-content:center;gap:0.4rem;
+         font-size:2.5rem;margin-bottom:1.25rem;cursor:pointer">
+      <span data-val="1" onclick="setStars(1)" onmouseover="hoverStars(1)" onmouseout="hoverStars(0)">☆</span>
+      <span data-val="2" onclick="setStars(2)" onmouseover="hoverStars(2)" onmouseout="hoverStars(0)">☆</span>
+      <span data-val="3" onclick="setStars(3)" onmouseover="hoverStars(3)" onmouseout="hoverStars(0)">☆</span>
+      <span data-val="4" onclick="setStars(4)" onmouseover="hoverStars(4)" onmouseout="hoverStars(0)">☆</span>
+      <span data-val="5" onclick="setStars(5)" onmouseover="hoverStars(5)" onmouseout="hoverStars(0)">☆</span>
+    </div>
+
+    <textarea id="input-comentario" placeholder="Comentario opcional..." 
+      style="width:100%;background:#161410;border:1px solid #2e2a24;color:#f5ede0;
+             border-radius:10px;padding:0.75rem;font-family:'DM Sans',sans-serif;
+             font-size:0.88rem;resize:none;outline:none;margin-bottom:1rem" rows="3">
+    </textarea>
+
+    <div style="display:flex;gap:0.75rem">
+      <button onclick="cerrarCalificacion()"
+        style="flex:1;padding:0.8rem;background:transparent;border:1px solid #2e2a24;
+               color:#f5ede0;border-radius:10px;cursor:pointer;font-family:'DM Sans',sans-serif">
+        Cancelar
+      </button>
+      <button onclick="enviarCalificacion()"
+        style="flex:1;padding:0.8rem;background:#c9a84c;border:none;color:#0d0c0a;
+               border-radius:10px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif">
+        Enviar ⭐
+      </button>
+    </div>
+  </div>
+</div>
+
       <div class="filter-bar">
         <button class="filter-btn active" data-cat="todos">Todos</button>
-        <button class="filter-btn" data-cat="comida">🌮 Comida</button>
-        <button class="filter-btn" data-cat="bebida">🥤 Bebidas</button>
-        <button class="filter-btn" data-cat="postre">🍮 Postres</button>
+        <button class="filter-btn" data-cat="comida"> Comida</button>
+        <button class="filter-btn" data-cat="bebida"> Bebidas</button>
+        <button class="filter-btn" data-cat="postre"> Postres</button>
       </div>
       <div id="menu-grid" class="menu-grid">
         <div style="color:var(--text-muted);grid-column:1/-1;text-align:center;padding:3rem">Cargando menú...</div>
@@ -306,7 +365,7 @@
 <div class="cart-overlay" id="cart-overlay" onclick="document.getElementById('cart-sidebar').classList.remove('open');this.classList.remove('show')"></div>
 <div class="cart-sidebar" id="cart-sidebar">
   <div class="cart-header">
-    <h2 style="font-size:1.3rem">🛒 Tu orden</h2>
+    <h2 style="font-size:1.3rem"> Tu orden</h2>
     <button id="cart-close" style="background:none;border:none;color:var(--text);font-size:1.5rem;cursor:pointer">×</button>
   </div>
   <div class="cart-body">
@@ -322,7 +381,7 @@
       <span id="cart-total" style="font-family:'Playfair Display',serif;font-size:1.6rem;color:var(--gold)">$0.00</span>
     </div>
     <button id="btn-send-order" class="btn btn-gold" style="width:100%;justify-content:center;font-size:1.05rem;padding:1rem">
-      📨 Enviar pedido
+       Enviar pedido
     </button>
   </div>
 </div>
@@ -358,14 +417,17 @@
 
   // Logo, hero y slogan por restaurante_id (cada restaurante tiene los suyos)
   const ridKey  = params.get('rid') || '';
-  const logoImg = ridKey ? localStorage.getItem('ros_logo_'   + ridKey) : null;
-  const heroBg  = ridKey ? localStorage.getItem('ros_hero_'   + ridKey) : null;
+  // const logoImg = ridKey ? localStorage.getItem('ros_logo_'   + ridKey) : null;
+  const heroBg = localStorage.getItem('ros_hero_' + ridKey) 
+            || localStorage.getItem('ros_hero_' + rid) 
+            || localStorage.getItem('ros_hero_bg') 
+            || null;
   const slogan  = ridKey ? localStorage.getItem('ros_slogan_' + ridKey) : null;
 
   const logoNav = document.getElementById('logo-nav');
-  if (logoImg && logoNav) {
-    logoNav.innerHTML = `<img src="${logoImg}" style="width:36px;height:36px;border-radius:8px;object-fit:cover">`;
-  }
+  // if (logoImg && logoNav) {
+  //   logoNav.innerHTML = `<img src="${logoImg}" style="width:36px;height:36px;border-radius:8px;object-fit:cover">`;
+  // }
 
   const heroBgEl = document.getElementById('hero-bg');
   if (heroBg && heroBgEl) heroBgEl.style.backgroundImage = `url(${heroBg})`;
@@ -489,6 +551,8 @@ async function cargarMenu() {
     if (!res.ok) return;
     State.menu = res.data;
     renderMenu();
+    if (rid) cargarPuntuacion(parseInt(rid));
+    
   } catch(err) {
     console.error('cargarMenu:', err);
     toast('No se pudo cargar el menú', 'error');
@@ -584,7 +648,7 @@ document.getElementById('form-registro').addEventListener('submit', async functi
     document.getElementById('registro-modal').remove();
     document.getElementById('app-main').classList.remove('hidden');
     const wn = document.getElementById('welcome-name');
-    wn.textContent   = '👋Bienvenid@ ' + nombre;
+    wn.textContent   = 'Bienvenid@ ' + nombre;
     wn.style.display = '';
     cargarMenu();
     setInterval(cargarMisPedidos, 15000);
@@ -678,22 +742,154 @@ const urlTipo   = urlParams.get('tipo');
 if (urlMesa) document.querySelector('[name=mesa]').value = urlMesa;
 if (urlTipo) { document.getElementById('tipo-select').value = urlTipo; toggleMesa(); }
 
+
 /* ── Si ya tiene sesión activa ─────────────────────────────── */
 if (State.token && State.usuario) {
-  document.getElementById('registro-modal').remove();
-  document.getElementById('app-main').classList.remove('hidden');
-  const wn = document.getElementById('welcome-name');
-  wn.textContent   = '👋Bienvenid@ ' + State.usuario.nombre;
-  wn.style.display = '';
-  cargarMenu();
-  setInterval(cargarMisPedidos, 8000);
+  // Verificar que el token sigue siendo válido antes de usarlo
+  fetch(apiURL('pedidos.php?accion=mis_pedidos&token=' + State.token))
+    .then(r => r.json())
+    .then(res => {
+      if (res.ok) {
+        // Token válido — entrar directo
+        document.getElementById('registro-modal').remove();
+        document.getElementById('app-main').classList.remove('hidden');
+        const wn = document.getElementById('welcome-name');
+        wn.textContent   = ' Bienvenid@ ' + State.usuario.nombre;
+        wn.style.display = '';
+        cargarMenu();
+        setInterval(cargarMisPedidos, 8000);
+      } else {
+        // Token expirado — limpiar y pedir que se registre de nuevo
+        localStorage.removeItem('fogon_usuario');
+        document.cookie = 'cliente_token=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/';
+        State.token   = '';
+        State.usuario = null;
+      }
+    })
+    .catch(() => {
+      // Sin conexión — dejar pasar igual
+      document.getElementById('registro-modal').remove();
+      document.getElementById('app-main').classList.remove('hidden');
+      cargarMenu();
+    });
 }
 
+// ── CALIFICACIONES ───────────────────────────────────────────
+let _ridActual = 0;
+let _estrellasSel = 0;
+
+async function cargarPuntuacion(rid) {
+  _ridActual = rid;
+  if (!rid) return;
+  try {
+    const r   = await fetch(apiURL('restaurantes.php?accion=puntuacion&id=' + rid));
+    const res = await r.json();
+    if (!res.ok) return;
+
+    const promedio = parseFloat(res.promedio) || 0;
+    const total    = res.total || 0;
+
+    // Renderizar estrellas
+    const starsEl = document.getElementById('stars-display');
+    if (starsEl) {
+      starsEl.innerHTML = [1,2,3,4,5].map(i =>
+        `<span style="color:${i <= Math.round(promedio) ? '#c9a84c' : '#2e2a24'}">${i <= Math.round(promedio) ? '★' : '☆'}</span>`
+      ).join('');
+    }
+
+    // Texto de puntuación
+    const textEl = document.getElementById('rating-text');
+    if (textEl) {
+      textEl.textContent = total > 0
+        ? `${promedio} (${total} ${total === 1 ? 'reseña' : 'reseñas'})`
+        : 'Sin calificaciones aún';
+    }
+
+    // Mostrar botón solo si no ha calificado en esta visita
+    const yaCalificó = localStorage.getItem('cal_' + rid + '_' + (State.token || ''));
+    const btnEl = document.getElementById('btn-calificar');
+    if (btnEl && State.token && !yaCalificó) {
+      btnEl.style.display = 'block';
+    }
+  } catch(e) { console.error('cargarPuntuacion:', e); }
+}
+
+function abrirCalificacion() {
+  _estrellasSel = 0;
+  hoverStars(0);
+  document.getElementById('input-comentario').value = '';
+  const nombreEl = document.getElementById('modal-rest-nombre');
+  if (nombreEl) {
+    const nombre = document.getElementById('hero-nombre')?.textContent || 'el restaurante';
+    nombreEl.textContent = nombre;
+  }
+  document.getElementById('modal-calificacion').style.display = 'flex';
+}
+
+function cerrarCalificacion() {
+  document.getElementById('modal-calificacion').style.display = 'none';
+}
+
+function hoverStars(val) {
+  const stars = document.querySelectorAll('#stars-input span');
+  stars.forEach((s, i) => {
+    const active = val > 0 ? i < val : i < _estrellasSel;
+    s.textContent = active ? '★' : '☆';
+    s.style.color  = active ? '#c9a84c' : '#7a6f60';
+  });
+}
+
+function setStars(val) {
+  _estrellasSel = val;
+  hoverStars(val);
+}
+
+async function enviarCalificacion() {
+  if (!_estrellasSel) {
+    toast('Selecciona cuántas estrellas merece', 'error'); return;
+  }
+  const comentario = document.getElementById('input-comentario').value.trim();
+  try {
+    const r = await fetch(apiURL('restaurantes.php?accion=calificar'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        restaurante_id: _ridActual,
+        token:          State.token,
+        estrellas:      _estrellasSel,
+        comentario
+      })
+    });
+    const res = await r.json();
+    if (!res.ok) { toast(res.mensaje, 'error'); return; }
+
+    // Guardar en localStorage para no volver a mostrar el botón
+    localStorage.setItem('cal_' + _ridActual + '_' + State.token, '1');
+    document.getElementById('btn-calificar').style.display = 'none';
+    cerrarCalificacion();
+    toast('🌟 ' + res.mensaje, 'success');
+    cargarPuntuacion(_ridActual); // refrescar estrellas
+  } catch(e) {
+    toast('Error al enviar calificación', 'error');
+  }
+}
+
+window.cerrarSesionCliente = function() {
+  localStorage.removeItem('fogon_usuario');
+  document.cookie = 'cliente_token=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/';
+  window.location.href = '/tienda/index,.html';
+};
+
 // Exponer funciones al scope global
-window.addToCart      = addToCart;
-window.removeFromCart = removeFromCart;
-window.showTab        = showTab;
-window.toggleMesa     = toggleMesa;
+window.addToCart         = addToCart;
+window.removeFromCart    = removeFromCart;
+window.showTab           = showTab;
+window.toggleMesa        = toggleMesa;
+window.abrirCalificacion = abrirCalificacion;
+window.cerrarCalificacion= cerrarCalificacion;
+window.setStars          = setStars;
+window.hoverStars        = hoverStars;
+window.enviarCalificacion= enviarCalificacion;
 
 })()
 </script>
